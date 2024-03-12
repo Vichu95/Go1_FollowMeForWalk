@@ -1,2 +1,1 @@
-First line.
-second line.
+New start
