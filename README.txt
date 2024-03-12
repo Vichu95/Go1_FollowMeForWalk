@@ -1,1 +1,1 @@
-Go 1
+README
