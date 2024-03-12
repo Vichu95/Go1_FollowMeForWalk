@@ -1,1 +1,1 @@
-New start
+Go 1
