@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch>
+  <node pkg="rslidar_sdk" name="rslidar_sdk_node" type="rslidar_sdk_node" output="screen">
+    <param name="config_path" value="$(find go1_lidars)/config/rs_config.yaml"/>
+  </node>
+</launch>

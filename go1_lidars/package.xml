@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>go1_lidars</name>
+  <version>1.0.0</version>
+  <description>The go1_lidars package</description>
+  <maintainer email="support@mybotshop.de">Salman Omar Sohail</maintainer>
+  <license>Private</license>
+  <buildtool_depend>catkin</buildtool_depend>
+</package>

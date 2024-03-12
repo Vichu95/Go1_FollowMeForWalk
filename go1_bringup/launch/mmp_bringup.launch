@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+  <group ns='go1'>
+    <include file="$(find go1_base)/launch/base.launch" />
+    <include file="$(find go1_description)/launch/description.launch"/>
+    <include file="$(find go1_control)/launch/teleop.launch"/>
+    <include file="$(find go1_control)/launch/ekf_localization_ns.launch"/>
+  </group>
+  <include file="$(find go1_control)/launch/open_manipulator.launch"/>
+  <include file="$(find go1_lidars)/launch/include/rs_lidar.xml"/>
+</launch>

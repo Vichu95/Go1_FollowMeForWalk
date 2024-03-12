@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!-- Open_Manipulator Chain -->
+<robot name="open_manipulator" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!-- Import all Gazebo-customization elements, including Gazebo colors -->
+  <xacro:include filename="$(find go1_description)/xacro/open_manipulator/open_manipulator.gazebo.xacro" />
+
+  <!-- Import Transmission -->
+  <xacro:include filename="$(find go1_description)/xacro/open_manipulator/open_manipulator.transmission.xacro" />
+
+  <!-- Import URDF -->
+  <xacro:include filename="$(find go1_description)/xacro/open_manipulator/open_manipulator.urdf.xacro" />
+
+</robot>

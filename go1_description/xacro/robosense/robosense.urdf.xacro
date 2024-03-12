@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<robot name="robosense" xmlns:xacro="http://ros.org/wiki/xacro">
+  <!-- Robosense Bracket -->
+  <link name="robosense_bracket">
+    <visual>
+      <geometry>
+        <mesh filename="package://go1_description/meshes/3d_brackets/robosense_fixture.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="grey"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://go1_description/meshes/3d_brackets/robosense_fixture.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+  
+  <joint name="robosense_bracket_joint" type="fixed">
+    <parent link="front_top_mount"/>
+    <child link="robosense_bracket"/>
+    <origin xyz="-0.125 0.05 0.021" rpy="0 0 3.14159"/>
+  </joint>
+
+  <!-- Robosense sensor casing-->
+  <link name="robosense">
+    <visual>
+      <geometry>
+        <mesh filename="package://go1_description/meshes/robosense/robosense.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="grey"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://go1_description/meshes/robosense/robosense.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+
+ <joint name="robosense_joint" type="fixed">
+    <parent link="robosense_bracket"/>
+    <child link="robosense"/>
+    <origin xyz="0.046 0.05 0.03" rpy="0.0 0.0 3.14159"/>
+  </joint>
+
+</robot>

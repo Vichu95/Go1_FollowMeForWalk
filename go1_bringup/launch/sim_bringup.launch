@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<launch>
+  <group ns='go1'>
+    <include file="$(find go1_base)/launch/base.launch" />
+    <include file="$(find go1_description)/launch/description.launch"/>
+    <include file="$(find go1_control)/launch/teleop.launch"/>
+    <include file="$(find go1_control)/launch/ekf_localization_ns.launch"/>
+
+    <remap from="/cmd_vel" to="/go1/cmd_vel"/>
+    <include file="$(find go1_navigation)/launch/odom_navi.launch"/>
+
+  </group>
+  <!-- Instead of running actual arm controller, use the simulated one from moveit with faked joint publisher -->
+  <include file="$(find go1_moveit)/launch/demo.launch"/>
+</launch>

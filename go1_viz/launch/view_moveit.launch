@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="rvizconfig" default="$(find go1_viz)/rviz/moveit.rviz" />
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" required="true" >
+    <rosparam command="load" file="$(find open_manipulator_moveit)/config/kinematics.yaml"/>
+  </node>
+</launch>

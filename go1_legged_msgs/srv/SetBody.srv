@@ -1,0 +1,7 @@
+uint8 mode  # Hardcoded to 1: standing
+float32 body_height
+float32 yaw
+float32 pitch
+float32 roll
+---
+bool success

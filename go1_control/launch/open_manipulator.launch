@@ -1,0 +1,60 @@
+<launch>
+  <arg name="use_robot_name"         default="go1_robotis"/>
+  <arg name="robot_name"             default="go1_robotis"/>
+  <arg name="debug"                  default="false"/>
+  <arg name="dynamixel_usb_port"     default="/dev/ttyUSB0"/>
+  <arg name="dynamixel_baud_rate"    default="1000000"/>
+  <arg name="control_period"         default="0.010"/>
+  <arg name="use_platform"           default="true"/>
+  <arg name="use_moveit"             default="true"/>
+  <arg name="robot_description"      default="robot_description"/>
+  <arg name="planning_group_name"    default="arm"/>
+  <arg name="sample_duration"        default="0.010"/>
+  <arg name="moveit_sample_duration" default="0.050"/>
+  <arg name="source_list"            default="[$(arg robot_name)/joint_states,go1/joint_states]"/>
+
+  <!-- Hardware Driver -->
+  <node name="$(arg use_robot_name)" pkg="open_manipulator_controller" type="open_manipulator_controller" output="screen" args="$(arg dynamixel_usb_port) $(arg dynamixel_baud_rate)">
+      <param name="using_platform"       value="$(arg use_platform)"/>
+      <param name="using_moveit"         value="$(arg use_moveit)"/>
+      <param name="planning_group_name"  value="$(arg planning_group_name)"/>
+      <param name="control_period"       value="$(arg control_period)"/>
+      <param name="moveit_sample_duration"  value="$(arg moveit_sample_duration)"/>
+  </node>
+
+  <!-- Moveit Planning Context -->
+  <group if="$(arg use_moveit)">
+    <param if="true" name="robot_description" command="xacro '$(find go1_description)/urdf/go1_robotis.urdf'"/>
+    <param name="$(arg robot_description)_semantic" textfile="$(find go1_moveit)/config/go1.srdf" />
+    <group ns="$(arg robot_description)_planning">
+      <rosparam command="load" file="$(find go1_moveit)/config/joint_limits.yaml"/>
+    </group>
+    <group ns="$(arg robot_description)_kinematics">
+      <rosparam command="load" file="$(find go1_moveit)/config/kinematics.yaml"/>
+    </group>
+
+    <node name="open_manipulator_joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+      <param name="/use_gui" value="false"/>
+      <rosparam param="source_list" subst_value="True">$(arg source_list)</rosparam> 
+    </node>
+    
+    <!-- Moveit Planner Custom-->
+    <include file="$(find go1_moveit)/launch/move_group.launch">
+      <arg name="allow_trajectory_execution" value="true"/>
+
+      <!-- open_manipulator has its own interface with moveit, set it to fake to prevent throwing error. -->
+      <!-- but remember that OM will be the one calculating & executing it. -->
+      <arg name="moveit_controller_manager" value="fake"/>
+      
+      <arg name="info" value="false"/>
+      <arg name="debug" value="$(arg debug)"/>
+    </include>
+
+    <!-- Run Rviz and load the default config to see the state of the move_group node -->
+    <!-- <include file="$(find open_manipulator_moveit)/launch/moveit_rviz.launch">
+      <arg name="config" value="true"/>
+      <arg name="debug" value="$(arg debug)"/>
+    </include> -->
+  </group>
+  
+</launch>

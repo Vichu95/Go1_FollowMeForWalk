@@ -1,0 +1,20 @@
+<launch>
+    <group ns="camera">
+        <node pkg="go1_camera" type="go1_camera_node" name="front" output="screen" >
+            <param name="camera_id"     type="int" value="1" />
+            <param name="camera_name"   type="str" value="camera_optical_face" />
+            <!-- for 1856X800 FPS:30, for 928x400 FPS:30 or 60 -->
+            <param name="fps"           type="int" value="30" />
+            <param name="frame_width"   type="int" value="1856" />
+            <param name="frame_height"  type="int" value="800" />
+        </node>
+        <node pkg="go1_camera" type="go1_camera_node" name="chin" output="screen" >
+            <param name="camera_id"     type="int" value="0" />
+            <param name="camera_name"   type="str" value="camera_optical_chin" />
+            <!-- for 1856X800 FPS:30, for 928x400 FPS:30 or 60 -->
+            <param name="fps"           type="int" value="30" />
+            <param name="frame_width"   type="int" value="1856" />
+            <param name="frame_height"  type="int" value="800" />
+        </node>
+    </group>
+</launch>

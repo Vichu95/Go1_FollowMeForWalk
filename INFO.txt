@@ -1,0 +1,14 @@
+This package is used as base in the Nvidia 13 board(N13).
+Base is taken from Dafa's work on 12 March 2024.
+From that the packages 'go1_arm_ikfast_plugin' and 'go1_moveit' are deleted. (manual deletion from the src folder)
+
+Also the related launch files are also removed from bringup files.
+
+
+
+
+
+Testing : 
+The teleoperation worked considering N13 as the MASTER. Every node ran in the N13.
+
+But only with N14 as MASTER, we were able to receive the raw lidar data as topic.
