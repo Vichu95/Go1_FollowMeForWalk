@@ -1,0 +1,6 @@
+devel_space: /home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/devel
+install: false
+install_space: /home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/install
+profile: default
+source_space: /home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/src
+workspace: /home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk
