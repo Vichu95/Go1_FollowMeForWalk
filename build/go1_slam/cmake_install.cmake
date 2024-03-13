@@ -148,6 +148,10 @@ if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/go1_slam" TYPE FILE FILES "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/src/go1_slam/package.xml")
 endif()
 
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/go1_slam" TYPE PROGRAM FILES "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/go1_slam/catkin_generated/installspace/ReadTopic.py")
+endif()
+
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
   include("/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/go1_slam/gtest/cmake_install.cmake")
