@@ -6,6 +6,5 @@
     <include file="$(find go1_control)/launch/teleop.launch"/>
     <include file="$(find go1_control)/launch/ekf_localization_ns.launch"/>
   </group>
-  <include file="$(find go1_control)/launch/open_manipulator.launch"/>
   <include file="$(find go1_lidars)/launch/include/rs_lidar.xml"/>
 </launch>

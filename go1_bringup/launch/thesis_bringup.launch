@@ -10,5 +10,4 @@
     <include file="$(find go1_navigation)/launch/odom_navi.launch"/>
 
   </group>
-  <include file="$(find go1_control)/launch/open_manipulator.launch"/>
 </launch>

@@ -18,7 +18,7 @@ lidar:
       max_distance: 200            #Maximum distance of point cloud
       use_lidar_clock: false       #True--Use the lidar clock as the message timestamp
                                    #False-- Use the system clock as the timestamp
-      pcap_path: /home/unitree/ros_ws/lidar.pcap #The path of pcap file
+      pcap_path: /home/unitree/Documents/go1catkin_ws/lidar.pcap #The path of pcap file
     ros:
       ros_frame_id: robosense                           #Frame id of packet message and point cloud message
       ros_recv_packet_topic: /rslidar_packets          #Topic used to receive lidar packets from ROS
