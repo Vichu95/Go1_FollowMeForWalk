@@ -410,6 +410,20 @@
       </geometry>
     </visual>
   </link>
+
+  <!-- BASE FOOTPRINT -->
+
+  <link name="base_footprint">
+  </link>
+  <joint name="base_footprint_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <parent link="base"/>
+    <child link="base_footprint"/>
+  </joint>
+
+
+
+
   <joint name="floating_base" type="fixed">
     <origin rpy="0 0 0" xyz="0 0 0"/>
     <parent link="base"/>
