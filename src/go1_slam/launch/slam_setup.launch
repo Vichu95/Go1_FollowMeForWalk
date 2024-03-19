@@ -1,0 +1,13 @@
+<launch>
+
+  <node pkg="slam_toolbox" type="async_slam_toolbox_node" name="slam_toolbox" output="screen">
+    <!-- Custom parameters -->
+    <rosparam command="load" file="$(find go1_slam)/config/mapper_params_online_async.yaml" />
+  </node>
+
+
+  <!-- RVIZ -->
+  <arg name="rvizconfig" default="$(find go1_slam)/config/slam_toolbox_default.rviz" />
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" required="true" />
+
+</launch>
