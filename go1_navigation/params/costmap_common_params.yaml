@@ -26,9 +26,9 @@ obstacles_layer:
   track_unknown_space: true
   scan:
     {
-      sensor_frame: os_sensor,
+      sensor_frame: robosense,
       data_type: PointCloud2,
-      topic: /ouster/points,
+      topic: /go1/rslidar_points,
       marking: true,
       clearing: true,
       inf_is_valid: true,
