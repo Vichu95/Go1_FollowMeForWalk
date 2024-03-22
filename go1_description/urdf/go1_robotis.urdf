@@ -413,6 +413,17 @@
     <parent link="base"/>
     <child link="trunk"/>
   </joint>
+
+
+  <!-- BASE FOOTPRINT -->
+
+  <link name="base_footprint">
+  </link>
+  <joint name="base_footprint_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <parent link="base"/>
+    <child link="base_footprint"/>
+  </joint>
   <link name="trunk">
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
