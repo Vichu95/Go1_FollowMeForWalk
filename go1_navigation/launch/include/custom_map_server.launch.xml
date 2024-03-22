@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <launch>
 	<!-- Use this map when launching indoor navigation -->
-	<arg name="map_file" default="$(find go1_navigation)/maps/devshop.yaml" /> <!-- Change map for you indoor env -->
+	<arg name="map_file" default="$(find go1_navigation)/maps/K14_lab.yaml" /> <!-- Change map for you indoor env -->
 	<node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
 </launch>

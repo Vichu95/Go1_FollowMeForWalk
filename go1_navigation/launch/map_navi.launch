@@ -2,13 +2,13 @@
 	<param name="use_sim_time" value="false" />
 
 	<!-- Run the ekf for map to odom config -->
-	<include file="$(find go1_control)/launch/ekf_localization.launch" />
+	<!-- <include file="$(find go1_control)/launch/ekf_localization.launch" /> -->
 	<!-- velocity_smoother -->
 	<include file="$(find go1_navigation)/launch/include/velocity_smoother.launch.xml" />
 	<!-- Lidar -->
-	<include file="$(find go1_navigation)/launch/include/ouster.launch.xml" />
+	<!-- <include file="$(find go1_navigation)/launch/include/ouster.launch.xml" /> -->
 	<!-- Run Pointcloud to laser scan if needed -->
-	<include file="$(find go1_navigation)/launch/include/point_cloud_to_laser_scan.launch.xml" /> 
+	<include file="$(find go1_navigation)/launch/include/point_cloud_to_laser_scan.launch" /> 
 	<!-- Run the map server -->
 	<include file="$(find go1_navigation)/launch/include/custom_map_server.launch.xml" />  
 	<!-- Run AMCL -->
