@@ -1,8 +1,8 @@
-# Install script for directory: /home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/catkin_tools_prebuild
+# Install script for directory: /home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/catkin_tools_prebuild
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/install")
+  set(CMAKE_INSTALL_PREFIX "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/install")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -54,103 +54,103 @@ endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   list(APPEND CMAKE_ABSOLUTE_DESTINATION_FILES
-   "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/install/_setup_util.py")
+   "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/install/_setup_util.py")
   if(CMAKE_WARN_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(WARNING "ABSOLUTE path INSTALL DESTINATION : ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
   if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
-  file(INSTALL DESTINATION "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/install" TYPE PROGRAM FILES "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/catkin_tools_prebuild/catkin_generated/installspace/_setup_util.py")
+  file(INSTALL DESTINATION "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/install" TYPE PROGRAM FILES "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/catkin_tools_prebuild/catkin_generated/installspace/_setup_util.py")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   list(APPEND CMAKE_ABSOLUTE_DESTINATION_FILES
-   "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/install/env.sh")
+   "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/install/env.sh")
   if(CMAKE_WARN_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(WARNING "ABSOLUTE path INSTALL DESTINATION : ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
   if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
-  file(INSTALL DESTINATION "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/install" TYPE PROGRAM FILES "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/catkin_tools_prebuild/catkin_generated/installspace/env.sh")
+  file(INSTALL DESTINATION "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/install" TYPE PROGRAM FILES "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/catkin_tools_prebuild/catkin_generated/installspace/env.sh")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   list(APPEND CMAKE_ABSOLUTE_DESTINATION_FILES
-   "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/install/setup.bash;/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/install/local_setup.bash")
+   "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/install/setup.bash;/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/install/local_setup.bash")
   if(CMAKE_WARN_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(WARNING "ABSOLUTE path INSTALL DESTINATION : ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
   if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
-  file(INSTALL DESTINATION "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/install" TYPE FILE FILES
-    "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/catkin_tools_prebuild/catkin_generated/installspace/setup.bash"
-    "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/catkin_tools_prebuild/catkin_generated/installspace/local_setup.bash"
+  file(INSTALL DESTINATION "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/install" TYPE FILE FILES
+    "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/catkin_tools_prebuild/catkin_generated/installspace/setup.bash"
+    "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/catkin_tools_prebuild/catkin_generated/installspace/local_setup.bash"
     )
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   list(APPEND CMAKE_ABSOLUTE_DESTINATION_FILES
-   "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/install/setup.sh;/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/install/local_setup.sh")
+   "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/install/setup.sh;/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/install/local_setup.sh")
   if(CMAKE_WARN_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(WARNING "ABSOLUTE path INSTALL DESTINATION : ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
   if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
-  file(INSTALL DESTINATION "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/install" TYPE FILE FILES
-    "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/catkin_tools_prebuild/catkin_generated/installspace/setup.sh"
-    "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/catkin_tools_prebuild/catkin_generated/installspace/local_setup.sh"
+  file(INSTALL DESTINATION "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/install" TYPE FILE FILES
+    "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/catkin_tools_prebuild/catkin_generated/installspace/setup.sh"
+    "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/catkin_tools_prebuild/catkin_generated/installspace/local_setup.sh"
     )
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   list(APPEND CMAKE_ABSOLUTE_DESTINATION_FILES
-   "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/install/setup.zsh;/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/install/local_setup.zsh")
+   "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/install/setup.zsh;/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/install/local_setup.zsh")
   if(CMAKE_WARN_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(WARNING "ABSOLUTE path INSTALL DESTINATION : ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
   if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
-  file(INSTALL DESTINATION "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/install" TYPE FILE FILES
-    "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/catkin_tools_prebuild/catkin_generated/installspace/setup.zsh"
-    "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/catkin_tools_prebuild/catkin_generated/installspace/local_setup.zsh"
+  file(INSTALL DESTINATION "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/install" TYPE FILE FILES
+    "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/catkin_tools_prebuild/catkin_generated/installspace/setup.zsh"
+    "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/catkin_tools_prebuild/catkin_generated/installspace/local_setup.zsh"
     )
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   list(APPEND CMAKE_ABSOLUTE_DESTINATION_FILES
-   "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/install/.rosinstall")
+   "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/install/.rosinstall")
   if(CMAKE_WARN_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(WARNING "ABSOLUTE path INSTALL DESTINATION : ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
   if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
-  file(INSTALL DESTINATION "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/install" TYPE FILE FILES "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/catkin_tools_prebuild/catkin_generated/installspace/.rosinstall")
+  file(INSTALL DESTINATION "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/install" TYPE FILE FILES "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/catkin_tools_prebuild/catkin_generated/installspace/.rosinstall")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" TYPE FILE FILES "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/catkin_tools_prebuild/catkin_generated/installspace/catkin_tools_prebuild.pc")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" TYPE FILE FILES "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/catkin_tools_prebuild/catkin_generated/installspace/catkin_tools_prebuild.pc")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/catkin_tools_prebuild/cmake" TYPE FILE FILES
-    "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/catkin_tools_prebuild/catkin_generated/installspace/catkin_tools_prebuildConfig.cmake"
-    "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/catkin_tools_prebuild/catkin_generated/installspace/catkin_tools_prebuildConfig-version.cmake"
+    "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/catkin_tools_prebuild/catkin_generated/installspace/catkin_tools_prebuildConfig.cmake"
+    "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/catkin_tools_prebuild/catkin_generated/installspace/catkin_tools_prebuildConfig-version.cmake"
     )
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/catkin_tools_prebuild" TYPE FILE FILES "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/catkin_tools_prebuild/package.xml")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/catkin_tools_prebuild" TYPE FILE FILES "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/catkin_tools_prebuild/package.xml")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/catkin_tools_prebuild/gtest/cmake_install.cmake")
+  include("/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/catkin_tools_prebuild/gtest/cmake_install.cmake")
 
 endif()
 
@@ -162,5 +162,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/catkin_tools_prebuild/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/catkin_tools_prebuild/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

@@ -1,4 +1,4 @@
-prefix=/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/devel/.private/catkin_tools_prebuild
+prefix=/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/devel/.private/catkin_tools_prebuild
 
 Name: catkin_tools_prebuild
 Description: Description of catkin_tools_prebuild

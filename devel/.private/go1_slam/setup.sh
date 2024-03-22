@@ -11,7 +11,7 @@
 
 # since this file is sourced either use the provided _CATKIN_SETUP_DIR
 # or fall back to the destination set at configure time
-: ${_CATKIN_SETUP_DIR:=/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/devel/.private/go1_slam}
+: ${_CATKIN_SETUP_DIR:=/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/devel/.private/go1_slam}
 _SETUP_UTIL="$_CATKIN_SETUP_DIR/_setup_util.py"
 unset _CATKIN_SETUP_DIR
 

@@ -2,7 +2,7 @@
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/install")
+  set(CMAKE_INSTALL_PREFIX "/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/install")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -44,7 +44,7 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/go1_slam/gtest/googletest/cmake_install.cmake")
+  include("/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/go1_slam/gtest/googletest/cmake_install.cmake")
 
 endif()
 

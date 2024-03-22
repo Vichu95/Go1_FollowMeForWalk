@@ -1,1 +1,1 @@
-/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/devel/.private/go1_slam/share/go1_slam/cmake/go1_slamConfig-version.cmake
+/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/devel/.private/go1_slam/share/go1_slam/cmake/go1_slamConfig-version.cmake

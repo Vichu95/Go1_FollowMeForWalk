@@ -19,7 +19,7 @@ Not searching for unused variables given on the command line.
 [36m--[0m Check for working CXX compiler: /usr/bin/c++ - skipped
 [36m--[0m Detecting CXX compile features
 [36m--[0m Detecting CXX compile features - done
-[36m--[0m Using CATKIN_DEVEL_PREFIX: /home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/devel/.private/catkin_tools_prebuild
+[36m--[0m Using CATKIN_DEVEL_PREFIX: /home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/devel/.private/catkin_tools_prebuild
 [36m--[0m Using CMAKE_PREFIX_PATH: /home/vishnu/Project/Go1_FollowMe/03_catkin_ws/devel;/home/vishnu/Documents/rl_gym_ros/devel;/home/vishnu/Documents/my_robotarm/devel;/home/vishnu/Documents/gazebo_prac/devel;/home/vishnu/catkin_ws/devel;/home/vishnu/ws_moveit/devel;/opt/ros/noetic
 [36m--[0m This workspace overlays: /home/vishnu/Project/Go1_FollowMe/03_catkin_ws/devel;/home/vishnu/Documents/rl_gym_ros/devel;/home/vishnu/Documents/my_robotarm/devel;/home/vishnu/Documents/gazebo_prac/devel;/home/vishnu/catkin_ws/devel;/home/vishnu/ws_moveit/devel;/opt/ros/noetic
 [33mCMake Warning (dev) at /opt/ros/noetic/share/catkin/cmake/python.cmake:4 (find_package):
@@ -40,7 +40,7 @@ This warning is for project developers.  Use -Wno-dev to suppress it.
 [36m--[0m Using empy: /usr/lib/python3/dist-packages/em.py
 [36m--[0m Using CATKIN_ENABLE_TESTING: ON
 [36m--[0m Call enable_testing()
-[36m--[0m Using CATKIN_TEST_RESULTS_DIR: /home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/catkin_tools_prebuild/test_results
+[36m--[0m Using CATKIN_TEST_RESULTS_DIR: /home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/catkin_tools_prebuild/test_results
 [36m--[0m Forcing gtest/gmock from source, though one was otherwise available.
 [36m--[0m Found gtest sources under '/usr/src/googletest': gtests will be built
 [36m--[0m Found gmock sources under '/usr/src/googletest': gmock will be built
@@ -82,6 +82,6 @@ This warning is for project developers.  Use -Wno-dev to suppress it.
 [36m--[0m Using Python nosetests: /usr/bin/nosetests3
 [36m--[0m catkin 0.8.10
 [36m--[0m BUILD_SHARED_LIBS is on
-[36m--[0m Configuring done (0.8s)
+[36m--[0m Configuring done (0.7s)
 [36m--[0m Generating done (0.0s)
-[36m--[0m Build files have been written to: /home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/catkin_tools_prebuild
+[36m--[0m Build files have been written to: /home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/catkin_tools_prebuild

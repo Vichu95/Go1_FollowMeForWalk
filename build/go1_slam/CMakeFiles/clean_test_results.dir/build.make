@@ -53,10 +53,10 @@ RM = /home/vishnu/.local/lib/python3.8/site-packages/cmake/data/bin/cmake -E rm 
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/src/go1_slam
+CMAKE_SOURCE_DIR = /home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/src/go1_slam
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/go1_slam
+CMAKE_BINARY_DIR = /home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/go1_slam
 
 # Utility rule file for clean_test_results.
 
@@ -67,7 +67,7 @@ include CMakeFiles/clean_test_results.dir/compiler_depend.make
 include CMakeFiles/clean_test_results.dir/progress.make
 
 CMakeFiles/clean_test_results:
-	/usr/bin/python3 /opt/ros/noetic/share/catkin/cmake/test/remove_test_results.py /home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/go1_slam/test_results
+	/usr/bin/python3 /opt/ros/noetic/share/catkin/cmake/test/remove_test_results.py /home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/go1_slam/test_results
 
 clean_test_results: CMakeFiles/clean_test_results
 clean_test_results: CMakeFiles/clean_test_results.dir/build.make
@@ -82,6 +82,6 @@ CMakeFiles/clean_test_results.dir/clean:
 .PHONY : CMakeFiles/clean_test_results.dir/clean
 
 CMakeFiles/clean_test_results.dir/depend:
-	cd /home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/go1_slam && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/src/go1_slam /home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/src/go1_slam /home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/go1_slam /home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/go1_slam /home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/go1_slam/CMakeFiles/clean_test_results.dir/DependInfo.cmake "--color=$(COLOR)"
+	cd /home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/go1_slam && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/src/go1_slam /home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/src/go1_slam /home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/go1_slam /home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/go1_slam /home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/go1_slam/CMakeFiles/clean_test_results.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : CMakeFiles/clean_test_results.dir/depend
 

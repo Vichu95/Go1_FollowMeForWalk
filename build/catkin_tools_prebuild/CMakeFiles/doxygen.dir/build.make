@@ -53,10 +53,10 @@ RM = /home/vishnu/.local/lib/python3.8/site-packages/cmake/data/bin/cmake -E rm 
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/catkin_tools_prebuild
+CMAKE_SOURCE_DIR = /home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/catkin_tools_prebuild
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/catkin_tools_prebuild
+CMAKE_BINARY_DIR = /home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/catkin_tools_prebuild
 
 # Utility rule file for doxygen.
 
@@ -78,6 +78,6 @@ CMakeFiles/doxygen.dir/clean:
 .PHONY : CMakeFiles/doxygen.dir/clean
 
 CMakeFiles/doxygen.dir/depend:
-	cd /home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/catkin_tools_prebuild && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/catkin_tools_prebuild /home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/catkin_tools_prebuild /home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/catkin_tools_prebuild /home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/catkin_tools_prebuild /home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/catkin_tools_prebuild/CMakeFiles/doxygen.dir/DependInfo.cmake "--color=$(COLOR)"
+	cd /home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/catkin_tools_prebuild && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/catkin_tools_prebuild /home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/catkin_tools_prebuild /home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/catkin_tools_prebuild /home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/catkin_tools_prebuild /home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/catkin_tools_prebuild/CMakeFiles/doxygen.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : CMakeFiles/doxygen.dir/depend
 

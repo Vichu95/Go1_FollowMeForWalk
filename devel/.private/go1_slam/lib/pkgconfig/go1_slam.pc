@@ -1,4 +1,4 @@
-prefix=/home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/devel/.private/go1_slam
+prefix=/home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/devel/.private/go1_slam
 
 Name: go1_slam
 Description: Description of go1_slam

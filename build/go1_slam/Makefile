@@ -57,10 +57,10 @@ RM = /home/vishnu/.local/lib/python3.8/site-packages/cmake/data/bin/cmake -E rm 
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/src/go1_slam
+CMAKE_SOURCE_DIR = /home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/src/go1_slam
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/go1_slam
+CMAKE_BINARY_DIR = /home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/go1_slam
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -142,9 +142,9 @@ install/strip/fast: preinstall/fast
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/go1_slam/CMakeFiles /home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/go1_slam//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/go1_slam/CMakeFiles /home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/go1_slam//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/build/go1_slam/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/build/go1_slam/CMakeFiles 0
 .PHONY : all
 
 # The main clean target

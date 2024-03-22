@@ -1,3 +1,5 @@
-Symlinking /home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/devel/share/go1_slam/cmake/go1_slamConfig-version.cmake
-Symlinking /home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/devel/share/go1_slam/cmake/go1_slamConfig.cmake
-Symlinking /home/vishnu/Project/Go1_FollowMe/04_Git_ws/go1_followmeforwalk/devel/lib/pkgconfig/go1_slam.pc
+Symlinking /home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/devel/share/go1_slam/cmake/go1_slamConfig-version.cmake
+Symlinking /home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/devel/share/go1_slam/cmake/go1_slamConfig.cmake
+Symlinking /home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/devel/lib/go1_slam/ReadTopic.py
+Symlinking /home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/devel/lib/go1_slam/cmake.lock
+Symlinking /home/vishnu/Project/Go1_FollowMe/04_Git_ws/Go1_FollowMeForWalk/devel/lib/pkgconfig/go1_slam.pc
