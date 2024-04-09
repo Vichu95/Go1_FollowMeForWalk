@@ -11,7 +11,7 @@
 	<group ns="local_ekf">
 		<node pkg="robot_localization" type="ekf_localization_node" name="ekf_localization_with_odom" >
 			<rosparam command="load" file="$(find go1_control)/config/odom_localization_config.yaml" />
-			<remap from="odometry/filtered" to="/odometry/filtered"/>
+			<remap from="odometry/filtered" to="/local_ekf/odometry/filtered"/>
 		</node>
 	</group>
 </launch>

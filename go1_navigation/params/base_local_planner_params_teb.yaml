@@ -7,7 +7,7 @@ TebLocalPlannerROS:
  
  # Docs
  # Categorized https://docs.ros.org/en/melodic/api/teb_local_planner/html/classteb__local__planner_1_1TebConfig.html
- odom_topic: /odometry/filtered
+ odom_topic: /local_ekf/odometry/filtered
  map_frame: /map
     
  # Trajectory
@@ -31,9 +31,9 @@ TebLocalPlannerROS:
  max_vel_x_backwards: 0.5
  max_vel_y: 0.35
  max_vel_theta: 0.11 # Default 0.5, prevent rotation
- acc_lim_x: 1
- acc_lim_y: 1
- acc_lim_theta: 0.11 # Default 0.5, prevent rotation
+ acc_lim_x: 3.5
+ acc_lim_y: 2
+ acc_lim_theta: 3 #0.11 # Default 0.5, prevent rotation
  min_turning_radius: 0.0
  footprint_model: # types: "point", "circular", "two_circles", "line", "polygon"
    type: "polygon"
