@@ -95,12 +95,14 @@ def main():
 
     mat = sl.Mat() 
     depth_for_display = sl.Mat()
+    depth_map = sl.Mat()
     iter = 0
     key = ''
     while key != 113:  # for 'q' key
         zed.grab(runtime)
         zed.retrieve_objects(objects, obj_runtime_param)
         zed.retrieve_image(mat, sl.VIEW.LEFT) # Retrieve left image
+        zed.retrieve_measure(depth_map, sl.MEASURE.DEPTH) # Retrieve depth
         cvImage = mat.get_data() # Convert sl.Mat to cv2.Mat
 
         zed.retrieve_image(depth_for_display, sl.VIEW.DEPTH)
@@ -131,11 +133,18 @@ def main():
                 for it in bounding_box :
                     print("    "+str(it),end='')
 
+                depth_value = depth_map.get_value(
+                    int((int(bounding_box_2d[1][0]) - int(bounding_box_2d[0][0]))/2)
+                    , int((int(bounding_box_2d[2][1]) - int(bounding_box_2d[0][1]))/2)
+                    )
 
+                print("\n\nDepth is ", depth_value, "\n\n")
 
                 # Make sure the mask is available for detected person
                 if first_object.mask.is_init():
                     mask_data = first_object.mask.get_data()
+                    print(type(mask_data))
+                    print((mask_data.shape))
                     ###############################################################
                     # Display mask on top of left image
                     ###############################################################
@@ -147,7 +156,7 @@ def main():
                     bounding_box = first_object.bounding_box_2d
                     set_subarray(bounding_box, overlay, output_mask)
                     # Overlay mask on top of the left image
-                    cv2.addWeighted(cvImage, 1, overlay, 0.3, 0.0, cvImage)
+                    cv2.addWeighted(cvImage, 1, overlay, 0.5, 0.0, cvImage)
                     
 
 
@@ -165,3 +174,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
