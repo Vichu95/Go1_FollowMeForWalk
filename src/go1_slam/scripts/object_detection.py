@@ -22,6 +22,26 @@ import pyzed.sl as sl
 import cv2
 import numpy as np
 
+
+
+
+def set_subarray(indices, input_array, subarray):
+    '''
+    Function used to set subarray values inside an array
+    Parameters:
+        indices         list of 2D coordinates (4 points defining the subarray "box" inside the array)
+        input_array     array to modify
+        subarray        subarray to take values from
+    '''
+    row_count = 0
+    # Iterate over the rows of the array to modify
+    for i in range(int(indices[0,1]),int(indices[3,1])):
+        # Replace array values with subarray values
+        input_array[i,int(indices[0,0]):int(indices[1,0])] = subarray[row_count]
+        row_count = row_count + 1
+    return input_array
+
+
 def main():
     # Create a Camera object
     zed = sl.Camera()
@@ -34,6 +54,10 @@ def main():
     init_params.coordinate_units = sl.UNIT.METER
     init_params.sdk_verbose = 1
 
+    init_params.depth_mode = sl.DEPTH_MODE.NEURAL # Use ULTRA depth mode
+    init_params.coordinate_units = sl.UNIT.MILLIMETER # Use millimeter units (for depth measurements)
+    init_params.depth_minimum_distance = 300 
+    init_params.depth_stabilization = 30 
     # Open the camera
     err = zed.open(init_params)
     if err != sl.ERROR_CODE.SUCCESS:
@@ -44,7 +68,8 @@ def main():
     obj_param.enable_tracking=True
     #obj_param.enable_segmentation=True
     #obj_param.detection_model = sl.OBJECT_DETECTION_MODEL.MULTI_CLASS_BOX  
-
+    obj_param.enable_mask_output = True
+    
     if obj_param.enable_tracking :
         positional_tracking_param = sl.PositionalTrackingParameters()
         #positional_tracking_param.set_as_static = True
@@ -61,15 +86,24 @@ def main():
     objects = sl.Objects()
     obj_runtime_param = sl.ObjectDetectionRuntimeParameters()
     obj_runtime_param.detection_confidence_threshold = 40
+    obj_runtime_param.object_class_filter = [sl.OBJECT_CLASS.PERSON]    # Only detect Persons
+
+
+    # Set runtime parameters after opening the camera
+    runtime = sl.RuntimeParameters()
+    runtime.sensing_mode = sl.SENSING_MODE.STANDARD # Preserves edges and depth accuracy
 
     mat = sl.Mat() 
+    depth_for_display = sl.Mat()
     iter = 0
     key = ''
     while key != 113:  # for 'q' key
-        zed.grab()
+        zed.grab(runtime)
         zed.retrieve_objects(objects, obj_runtime_param)
         zed.retrieve_image(mat, sl.VIEW.LEFT) # Retrieve left image
         cvImage = mat.get_data() # Convert sl.Mat to cv2.Mat
+
+        zed.retrieve_image(depth_for_display, sl.VIEW.DEPTH)
         if objects.is_new :
             obj_array = objects.object_list
             print("\n\n " + str(len(obj_array))+" Object(s) detected\n")
@@ -97,13 +131,36 @@ def main():
                 for it in bounding_box :
                     print("    "+str(it),end='')
 
+
+
+                # Make sure the mask is available for detected person
+                if first_object.mask.is_init():
+                    mask_data = first_object.mask.get_data()
+                    ###############################################################
+                    # Display mask on top of left image
+                    ###############################################################
+                    # Create an empty overlay mat with the size of the original image
+                    overlay = np.zeros((zed.get_camera_information().camera_resolution.height, zed.get_camera_information().camera_resolution.width,4), dtype='uint8')
+                    # Convert the 2D mask into a 4-channel mat
+                    output_mask = cv2.cvtColor(mask_data, cv2.COLOR_GRAY2BGRA)
+                    # Replace overlay mat with mask data inside the given 2D bounding box (see sl.ObjectData.bounding_box_2d doc for more info)
+                    bounding_box = first_object.bounding_box_2d
+                    set_subarray(bounding_box, overlay, output_mask)
+                    # Overlay mask on top of the left image
+                    cv2.addWeighted(cvImage, 1, overlay, 0.3, 0.0, cvImage)
+                    
+
+
+
         iter = iter +1
-        cv2.imshow("Hello", cvImage) #Display image
+        cv2.imshow("Camera", cvImage) #Display image
+        cv2.imshow("Depth", depth_for_display.get_data())
         key = cv2.waitKey(1)
 
     cv2.destroyAllWindows()
     # Close the camera
     zed.disable_object_detection()
+    zed.disable_positional_tracking()
     zed.close()
 
 if __name__ == "__main__":
