@@ -55,8 +55,8 @@ def main():
     init_params.sdk_verbose = 1
 
     init_params.depth_mode = sl.DEPTH_MODE.NEURAL # Use ULTRA depth mode
-    init_params.coordinate_units = sl.UNIT.MILLIMETER # Use millimeter units (for depth measurements)
-    init_params.depth_minimum_distance = 300 
+    init_params.coordinate_units = sl.UNIT.CENTIMETER # Use millimeter units (for depth measurements)
+    init_params.depth_minimum_distance = 30 
     init_params.depth_stabilization = 30 
     # Open the camera
     err = zed.open(init_params)
@@ -156,7 +156,89 @@ def main():
                     bounding_box = first_object.bounding_box_2d
                     set_subarray(bounding_box, overlay, output_mask)
                     # Overlay mask on top of the left image
+
                     cv2.addWeighted(cvImage, 1, overlay, 0.5, 0.0, cvImage)
+
+
+
+                    ## Calculating average depth in the mat
+                    # Create a larger 2D array
+                    # Get the dimensions of the matrix
+                    cvheight, cvwidth, _ = cvImage.shape
+
+                    print("Image size", cvheight, " ", cvwidth)
+                    larger_array = np.zeros((cvheight, cvwidth))  # Example 5x5 array filled with zeros
+
+
+                    # Define the coordinates of the rectangle in the larger array
+                    x1, y1 = int(bounding_box_2d[0][0]), int(bounding_box_2d[0][1])  # Top-left corner
+                    x2, y2 = int(bounding_box_2d[2][0]), int(bounding_box_2d[2][1])  # Bottom-right corner
+
+
+                    print(x1,y1,x2,y2)
+
+                    print("Mask data shape",mask_data.shape)
+                    print("larger array data shape",larger_array.shape)
+                    # # Calculate the dimensions of the smaller array based on the rectangle
+                    # smaller_width = x2 - x1
+                    # smaller_height = y2 - y1
+
+                    # # Create the smaller array
+                    # smaller_array = np.ones((smaller_height, smaller_width))  # Example smaller array filled with ones
+
+                    # # Create a mask for non-zero elements
+                    # mask = (smaller_array != 0)
+
+                    # # Replace non-zero elements with 1
+                    # smaller_array[mask] = 255
+
+                    # Load the larger array
+                    # Assuming larger_array is already defined or loaded
+
+                    # Replace the region within the rectangle in the larger array with the smaller array
+                    larger_array[y1:y2, x1:x2] = mask_data
+
+
+
+
+                    #cv2.addWeighted(cvImage, 1, larger_array, 0.5, 0.0, cvImage)
+
+
+
+                    # Display the larger array after replacement
+                    #print(smaller_array)
+                    #print("Larger Array after replacement:")
+                    #print(larger_array)
+
+
+                    # Generate a random 2D array with elements between 1 and 10
+                    # random_array = np.random.randint(1, 11, size=(10, 10))
+
+                    # # Print the random array
+                    # print("Random 2D array:")
+                    # print(random_array)
+
+
+                    # Find the indices where the other array has 255s
+                    indices = np.where(larger_array == 255)
+
+                    depthvalue = depth_map.get_data()
+                    print("depth data shape",depthvalue.shape)
+                    # print("indxces data shape",indices.shape)
+
+                    # Extract elements from the random array corresponding to the indices
+                    corresponding_elements = depthvalue[indices]
+
+                    # Print the corresponding elements
+                    print("Corresponding elements from random array:", corresponding_elements)
+
+
+
+                    # Calculate the mean of the array
+                    mean_value = np.mean(corresponding_elements)
+
+                    # Print the mean
+                    print("Mean of the array:", mean_value)
                     
 
 
