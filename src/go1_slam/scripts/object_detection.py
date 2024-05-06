@@ -43,7 +43,7 @@ def main():
     obj_param = sl.ObjectDetectionParameters()
     obj_param.enable_tracking=True
     #obj_param.enable_segmentation=True
-    #obj_param.detection_model = sl.OBJECT_DETECTION_MODEL.MULTI_CLASS_BOX_MEDIUM
+    #obj_param.detection_model = sl.OBJECT_DETECTION_MODEL.MULTI_CLASS_BOX  
 
     if obj_param.enable_tracking :
         positional_tracking_param = sl.PositionalTrackingParameters()
@@ -62,13 +62,17 @@ def main():
     obj_runtime_param = sl.ObjectDetectionRuntimeParameters()
     obj_runtime_param.detection_confidence_threshold = 40
 
+    mat = sl.Mat() 
     iter = 0
-    while iter < 100:
+    key = ''
+    while key != 113:  # for 'q' key
         zed.grab()
         zed.retrieve_objects(objects, obj_runtime_param)
+        zed.retrieve_image(mat, sl.VIEW.LEFT) # Retrieve left image
+        cvImage = mat.get_data() # Convert sl.Mat to cv2.Mat
         if objects.is_new :
             obj_array = objects.object_list
-            print(str(len(obj_array))+" Object(s) detected\n")
+            print("\n\n " + str(len(obj_array))+" Object(s) detected\n")
             if len(obj_array) > 0 :
                 first_object = obj_array[0]
                 print("First object attributes:")
@@ -84,6 +88,8 @@ def main():
 
                 print(" Bounding Box 2D ")
                 bounding_box_2d = first_object.bounding_box_2d
+                print(bounding_box_2d[0])
+                cvImage = cv2.rectangle(cvImage,[int(bounding_box_2d[0][0]),int(bounding_box_2d[0][1])], [int(bounding_box_2d[2][0]),int(bounding_box_2d[2][1])],(255,0,0),2)
                 for it in bounding_box_2d :
                     print("    "+str(it),end='')
                 print("\n Bounding Box 3D ")
@@ -92,7 +98,10 @@ def main():
                     print("    "+str(it),end='')
 
         iter = iter +1
+        cv2.imshow("Hello", cvImage) #Display image
+        key = cv2.waitKey(1)
 
+    cv2.destroyAllWindows()
     # Close the camera
     zed.disable_object_detection()
     zed.close()
