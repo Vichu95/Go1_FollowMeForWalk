@@ -26,7 +26,8 @@ import numpy as np
 ## Object detection
 OBJECT_DETECTION_ACCURACY_THRESHOLD = 40
 DIST_PERSON_CAMERA_TOBEKEPT = 100
-DIST_FROM_CAMERA_CENTRE_THRESHOLD = 168 #Image width/4 . Reinitialized in init
+DIST_PERSON_CAMERA_DIFF_THRESHOLD = 10
+DIST_FROM_CAMERA_CENTRE_THRESHOLD = 84 #Image width/8 . Reinitialized in init
 
 POINT_X= 0
 POINT_Y = 1
@@ -45,6 +46,12 @@ DEFAULT_TEXT_SIZE = 1
 DEFAULT_TEXT_COLOR = COLOR_BLUE
 DEFAULT_TEXT_PIXEL = DEFAULT_TEXT_SIZE * 25 #Needed for adding text in images
 
+ARROW_LENGTH = 50
+ARROW_TIP = 0.5
+ARROW_THICKNESS = 12
+
+POS_IMAGE_TOP_LEFT_TEXT = [10,30]
+POS_IMAGE_BOTTOM_RIGHT_ARROW = [600,300]
 
 ################################################################
 ##############    C L A S S E S
@@ -110,9 +117,11 @@ class FollowMe_Go1():
         self.image_width = self.zed.get_camera_information().camera_resolution.width
         self.image_middle_bottom_line = (int(self.image_width/2), self.image_height)
         self.image_vertical_centre_xpoint = int(self.image_width/2)
-        DIST_FROM_CAMERA_CENTRE_THRESHOLD = int(self.image_width/4)
 
-        self.camera_raw_op = '' 
+        global DIST_FROM_CAMERA_CENTRE_THRESHOLD
+        DIST_FROM_CAMERA_CENTRE_THRESHOLD = int(self.image_width/8)
+
+        self.camera_raw_op = np.zeros((self.image_height,self.image_width))
         self.camera_depth_op = ''
         self.camera_depth_map = ''
 
@@ -132,9 +141,6 @@ class FollowMe_Go1():
         zed_runtime_param.sensing_mode = sl.SENSING_MODE.STANDARD # Preserves edges and depth accuracy
 
         
-        ## Show state
-        self.camera_raw_op = addOpenCVText(self.camera_raw_op, self.state , (0,0))
-
 
         if self.zed.grab(zed_runtime_param) == sl.ERROR_CODE.SUCCESS:
 
@@ -154,6 +160,12 @@ class FollowMe_Go1():
             
             objects_detected = sl.Objects()
             self.zed.retrieve_objects(objects_detected, obj_detctn_runtime_param)
+
+
+
+            ## Show state
+            self.camera_raw_op = addOpenCVText(self.camera_raw_op, self.state , POS_IMAGE_TOP_LEFT_TEXT, color_ip=COLOR_GREEN)
+
 
             ## Analyzing the objects and getting relevant informations
             if objects_detected.is_new :
@@ -178,8 +190,6 @@ class FollowMe_Go1():
                     self.BB_CORNER_TOP_RIGHT_TEXT = (self.obj_bb2d[POINT_TOP_RIGHT][POINT_X], self.obj_bb2d[POINT_TOP_RIGHT][POINT_Y] + DEFAULT_TEXT_PIXEL)
                     self.BB_MIDDLE_BOTTOM_LINE =  ( self.obj_bb2d[POINT_BOTTOM_LEFT][POINT_X] + int((self.obj_bb2d[POINT_BOTTOM_RIGHT][POINT_X] - self.obj_bb2d[POINT_BOTTOM_LEFT][POINT_X])/2) , self.obj_bb2d[POINT_BOTTOM_RIGHT][POINT_Y])
                     
-                    print(self.BB_MIDDLE_BOTTOM_LINE)
-                    print(self.image_middle_bottom_line)
 
                     # Draw box
                     self.camera_raw_op = cv2.rectangle(self.camera_raw_op,
@@ -207,19 +217,14 @@ class FollowMe_Go1():
                                     color_ip=COLOR_YELLOW
                                     )
 
-            cv2.imshow("Camera", self.camera_raw_op) #Display image
-            cv2.imshow("Depth", self.camera_depth_op)
-            cv2.waitKey(1)
-
         else:
             print("\nZED Grab function failed.\n")
 
+        
 
         
 
     def process_depth(self, mask_data ):
-
-        print(mask_data.shape)
 
 
         depth_map_complete = np.zeros((self.image_height,self.image_width))
@@ -248,22 +253,31 @@ class FollowMe_Go1():
 
         # Check if human is detected
         if(self.person_detected):
+                
                     
             # Check if the human is almost at the centre
 
 
-                # Calculate centre point of camera
-                self.image_vertical_centre_xpoint
+                # Calculate centre point of camera and draw the lines for reference
+                print("Camera centre : ",self.image_vertical_centre_xpoint)
+                self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint,0), (self.image_vertical_centre_xpoint,self.image_height), color_ip=COLOR_YELLOW)
+                self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint-DIST_FROM_CAMERA_CENTRE_THRESHOLD,0), (self.image_vertical_centre_xpoint-DIST_FROM_CAMERA_CENTRE_THRESHOLD,self.image_height), color_ip=COLOR_YELLOW)
+                self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint+DIST_FROM_CAMERA_CENTRE_THRESHOLD,0), (self.image_vertical_centre_xpoint+DIST_FROM_CAMERA_CENTRE_THRESHOLD,self.image_height), color_ip=COLOR_YELLOW)
+               
                 # Calculate centre point of the detected person
-                self.BB_MIDDLE_BOTTOM_LINE[POINT_X]
+                print("Person centre : ",self.BB_MIDDLE_BOTTOM_LINE[POINT_X])
+                self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.BB_MIDDLE_BOTTOM_LINE[POINT_X],0), (self.BB_MIDDLE_BOTTOM_LINE[POINT_X],self.image_height), color_ip=COLOR_GREEN)
         
                 # Check if they are close
                 if(abs(self.image_vertical_centre_xpoint - self.BB_MIDDLE_BOTTOM_LINE[POINT_X]) < DIST_FROM_CAMERA_CENTRE_THRESHOLD) :
                     # If yes, change the state to following
                     self.state = 'FOLLOWING'
+                    print("Its near")
+
+                    cv2.waitKey(5)
                 
                 else:
-                    print("Not close")
+                    print("Not near the centre")
         
         else:
             print("Person not detected...")
@@ -276,16 +290,31 @@ class FollowMe_Go1():
         print("Following the person ")
 
         # Calculate the depth difference from distance to be kept and current depth
+        depth_diff_flag = False
+        depth_diff = 0
+        if(abs(self.person_depth - DIST_PERSON_CAMERA_TOBEKEPT) > DIST_PERSON_CAMERA_DIFF_THRESHOLD):
+            depth_diff = self.person_depth - DIST_PERSON_CAMERA_TOBEKEPT
+            depth_diff_flag = True
 
-        # If difference is greater than threshold, move forward
+        print("Depth Flag : ", depth_diff_flag, " Depth Difference : ", depth_diff)
 
-        # If less, move backward
+        if(depth_diff_flag):
+            # If difference is greater than threshold, move forward
+            if(depth_diff > 0):
+                print("Move forward")
+                self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'up' )
+        
+            # If less, move backward
+            if(depth_diff < 0):
+                print("Move backward")
+                self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'down' )
 
+        else:
+            print("Maintained")
 
         # Check the difference from centre of camera
         # If not within threshold, rotate left or right
-
-
+        
 
         
 
@@ -293,8 +322,9 @@ class FollowMe_Go1():
     def followme_run(self):
 
         print("Executing run")
-        
-        while True:
+        key=''
+
+        while key!=113:
             ## Read the camera first
             self.capture_camera()
 
@@ -303,7 +333,16 @@ class FollowMe_Go1():
 
             elif self.state == 'FOLLOWING':
                 self.following()
-              
+
+
+            
+            cv2.imshow("Camera", self.camera_raw_op) #Display image
+            cv2.imshow("Depth", self.camera_depth_op)
+            key = cv2.waitKey(1)
+
+            if(key == 113 ):
+                print("\n\n\n\nEXITING!!!!!!!!!\n\n\n")
+                
 
 
         
@@ -339,6 +378,31 @@ def addOpenCVLine(image, start_pos = (0, 0), end_pos = (100, 100), color_ip = DE
     return new_imagewithLine
 
 
+def addOpenCVArrow(image, start_pos = [0, 0], direction = 'up', color_ip = DEFAULT_TEXT_COLOR ):
+
+    end_pos = start_pos
+
+    if(direction == 'up'):
+        end_pos[POINT_Y] = start_pos[POINT_Y] + ARROW_LENGTH
+
+    elif(direction == 'down'):
+        end_pos[POINT_Y] = start_pos[POINT_Y] - ARROW_LENGTH
+
+    elif(direction == 'right'):
+        end_pos[POINT_X] = start_pos[POINT_X] + ARROW_LENGTH
+
+    elif(direction == 'left'):
+        end_pos[POINT_X] = start_pos[POINT_X] - ARROW_LENGTH
+
+
+
+    new_imagewithArrow = cv2.arrowedLine(   image, start_pos, end_pos,
+                                    color = color_ip,
+                                    thickness = ARROW_THICKNESS,
+                                    tipLength = ARROW_TIP
+                                    )    
+    return new_imagewithArrow
+
 ################################################################
 ##############    M A I N
 ################################################################
@@ -351,5 +415,7 @@ if __name__ == "__main__":
     followme_go1 = FollowMe_Go1()
 
     followme_go1.followme_run()
+
+
 
 
