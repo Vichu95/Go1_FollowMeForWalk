@@ -25,6 +25,8 @@ import numpy as np
 
 ## Object detection
 OBJECT_DETECTION_ACCURACY_THRESHOLD = 40
+DIST_PERSON_CAMERA_TOBEKEPT = 100
+DIST_FROM_CAMERA_CENTRE_THRESHOLD = 168 #Image width/4 . Reinitialized in init
 
 POINT_X= 0
 POINT_Y = 1
@@ -100,16 +102,22 @@ class FollowMe_Go1():
         ######
         ## VARIABLES
         ######
-        self.camera_raw_op = '' 
-        self.camera_depth_op = ''
-        self.camera_depth_map = ''
 
 
-        self.person_depth = 0
+        self.person_depth = DIST_PERSON_CAMERA_TOBEKEPT
 
         self.image_height = self.zed.get_camera_information().camera_resolution.height
         self.image_width = self.zed.get_camera_information().camera_resolution.width
         self.image_middle_bottom_line = (int(self.image_width/2), self.image_height)
+        self.image_vertical_centre_xpoint = int(self.image_width/2)
+        DIST_FROM_CAMERA_CENTRE_THRESHOLD = int(self.image_width/4)
+
+        self.camera_raw_op = '' 
+        self.camera_depth_op = ''
+        self.camera_depth_map = ''
+
+        self.state = 'INIT'
+        self.person_detected = False
 
     def capture_camera(self):
 
@@ -123,7 +131,9 @@ class FollowMe_Go1():
         zed_runtime_param = sl.RuntimeParameters()
         zed_runtime_param.sensing_mode = sl.SENSING_MODE.STANDARD # Preserves edges and depth accuracy
 
-
+        
+        ## Show state
+        self.camera_raw_op = addOpenCVText(self.camera_raw_op, self.state , (0,0))
 
 
         if self.zed.grab(zed_runtime_param) == sl.ERROR_CODE.SUCCESS:
@@ -153,6 +163,7 @@ class FollowMe_Go1():
                 if len(objects_detected_array) > 0 :
                     
                     ## TODO : store the id of person being tracked, check if the id is same in detected objects
+                    self.person_detected = True
 
                     ## Get the first object
                     first_object = objects_detected_array[0]
@@ -210,11 +221,15 @@ class FollowMe_Go1():
 
         print(mask_data.shape)
 
+
         depth_map_complete = np.zeros((self.image_height,self.image_width))
         # Place the max at the bounding box location in the empty image
         depth_map_complete[self.obj_bb2d[POINT_TOP_LEFT][POINT_Y]: self.obj_bb2d[POINT_BOTTOM_RIGHT][POINT_Y] , 
                            self.obj_bb2d[POINT_TOP_LEFT][POINT_X]: self.obj_bb2d[POINT_BOTTOM_RIGHT][POINT_X] ] = mask_data
 
+
+        ## Replace infinite values
+        self.camera_depth_map[np.isinf(self.camera_depth_map)] = 0
 
         # Find the indices where the array has 255s. Mask contains 255 where the object is present, rest 0
         indices_255 = np.where(depth_map_complete == 255)
@@ -222,16 +237,73 @@ class FollowMe_Go1():
         # Extract depth values of object from the depth map corresponding to the indices
         obj_depth_values = self.camera_depth_map[indices_255]
         # Calculate the mean of the array
-        obj_detected_depth_mean = np.mean(obj_depth_values)
+        obj_detected_depth_mean = np.mean(obj_depth_values)      
 
         return obj_detected_depth_mean, depth_map_complete
+
+
+    def starting(self):
+
+        print("Initializing the follow me ")
+
+        # Check if human is detected
+        if(self.person_detected):
+                    
+            # Check if the human is almost at the centre
+
+
+                # Calculate centre point of camera
+                self.image_vertical_centre_xpoint
+                # Calculate centre point of the detected person
+                self.BB_MIDDLE_BOTTOM_LINE[POINT_X]
+        
+                # Check if they are close
+                if(abs(self.image_vertical_centre_xpoint - self.BB_MIDDLE_BOTTOM_LINE[POINT_X]) < DIST_FROM_CAMERA_CENTRE_THRESHOLD) :
+                    # If yes, change the state to following
+                    self.state = 'FOLLOWING'
+                
+                else:
+                    print("Not close")
+        
+        else:
+            print("Person not detected...")
+
+
+        
+
+    def following(self):
+
+        print("Following the person ")
+
+        # Calculate the depth difference from distance to be kept and current depth
+
+        # If difference is greater than threshold, move forward
+
+        # If less, move backward
+
+
+        # Check the difference from centre of camera
+        # If not within threshold, rotate left or right
+
+
+
+        
+
 
     def followme_run(self):
 
         print("Executing run")
-        ## Read the camera first
+        
         while True:
-          self.capture_camera()
+            ## Read the camera first
+            self.capture_camera()
+
+            if self.state == 'INIT':
+                self.starting()
+
+            elif self.state == 'FOLLOWING':
+                self.following()
+              
 
 
         
@@ -279,4 +351,5 @@ if __name__ == "__main__":
     followme_go1 = FollowMe_Go1()
 
     followme_go1.followme_run()
+
 
