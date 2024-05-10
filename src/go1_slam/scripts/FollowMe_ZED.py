@@ -23,15 +23,15 @@ import requests
 ################################################################
 
 ## Go1
-MIN_VEL_FOLLOME_POS = 0.111
-MIN_VEL_FOLLOME_NEG = -0.111
-ANG_VEL_FOLLOME_POS = 0.25
-ANG_VEL_FOLLOME_NEG = -0.25
+MIN_VEL_FOLLOME_POS = 0.17
+MIN_VEL_FOLLOME_NEG = -0.17
+ANG_VEL_FOLLOME_POS = 0.7
+ANG_VEL_FOLLOME_NEG = -0.7
 
 
 ## Object detection
 OBJECT_DETECTION_ACCURACY_THRESHOLD = 40
-DIST_PERSON_CAMERA_TOBEKEPT = 60
+DIST_PERSON_CAMERA_TOBEKEPT = 100
 DIST_PERSON_CAMERA_DIFF_THRESHOLD = 10
 DIST_FROM_CAMERA_CENTRE_THRESHOLD = 84 #Image width/8 . Reinitialized in init
 
@@ -366,26 +366,39 @@ class FollowMe_Go1():
             if(centre_deviation_flag):
                 # If difference is greater than threshold, move right
                 if(centre_deviation > 0):
-                    print("Move Right")
+                    print("Person moved to my Right")
 
-                    if(depth_diff > 0):
-                        followme_cmd_vel.angular.z = ANG_VEL_FOLLOME_NEG
+                    if(depth_diff_flag):
+                        # Move forward towards right side
+                        if(depth_diff > 0):
+                            followme_cmd_vel.angular.z = ANG_VEL_FOLLOME_POS
+                    
+                        # Move backward towards left side
+                        elif(depth_diff < 0):
+                            followme_cmd_vel.angular.z = ANG_VEL_FOLLOME_POS
                     else:
-                        followme_cmd_vel.angular.z = ANG_VEL_FOLLOME_POS
-
+                        ## Only turn right
+                        followme_cmd_vel.angular.z = ANG_VEL_FOLLOME_POS   #working
 
 
                     self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'right' )
             
                 # If less, move left
                 if(centre_deviation < 0):
-                    print("Move Left")                
+                    print("Person moved to my Left")                
 
 
-                    if(depth_diff > 0):
-                        followme_cmd_vel.angular.z = ANG_VEL_FOLLOME_POS
+                    if(depth_diff_flag):
+                        # Move forward towards left side
+                        if(depth_diff > 0):
+                            followme_cmd_vel.angular.z = ANG_VEL_FOLLOME_NEG
+                    
+                        # Move backward towards right side
+                        elif(depth_diff < 0):
+                            followme_cmd_vel.angular.z = ANG_VEL_FOLLOME_NEG
                     else:
-                        followme_cmd_vel.angular.z = ANG_VEL_FOLLOME_NEG
+                        ## Only turn left
+                        followme_cmd_vel.angular.z = ANG_VEL_FOLLOME_NEG  #working
 
 
                     self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left' )
@@ -420,9 +433,9 @@ class FollowMe_Go1():
 
 
             
-            #cv2.imshow("Camera", self.camera_raw_op) #Display image
+            cv2.imshow("Camera", self.camera_raw_op) #Display image
             #cv2.imshow("Depth", self.camera_depth_op)
-            #key = cv2.waitKey(1)
+            key = cv2.waitKey(1)
 
 
                         
@@ -448,7 +461,8 @@ class FollowMe_Go1():
                     print("STOP received ")
 
             except requests.ConnectionError:
-                print("Connection error: Failed to connect to the server:",requests.ConnectionError)	
+                print("")
+                # print("Connection error: Failed to connect to the server:",requests.ConnectionError)	
 
             
             if(key == 113 ):
