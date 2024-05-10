@@ -13,6 +13,7 @@ from geometry_msgs.msg import Twist
 
 import cv2
 import numpy as np
+import requests
 
 
 
@@ -419,10 +420,37 @@ class FollowMe_Go1():
 
 
             
-            cv2.imshow("Camera", self.camera_raw_op) #Display image
-            cv2.imshow("Depth", self.camera_depth_op)
-            key = cv2.waitKey(1)
+            #cv2.imshow("Camera", self.camera_raw_op) #Display image
+            #cv2.imshow("Depth", self.camera_depth_op)
+            #key = cv2.waitKey(1)
 
+
+                        
+            # Encode the frame as JPEG
+            _, jpeg = cv2.imencode('.jpg', self.camera_raw_op)
+            frame_bytes = jpeg.tobytes()
+
+            # Send the frame to the Flask server
+            try:
+                response = requests.post('http://192.168.12.65:5000/update_frame', data=frame_bytes)
+                if response.status_code != 200:
+                    print("Failed to send frame to server")
+            except requests.exceptions.RequestException as e:
+                print("Error sending frame to server:", e)
+
+            
+            try:
+                response = requests.get('http://192.168.12.65:5000/get_triggered_value')
+                data = response.json()
+
+                if(data.get('triggered_value') == 'STOP'):           
+                    key = 113
+                    print("STOP received ")
+
+            except requests.ConnectionError:
+                print("Connection error: Failed to connect to the server:",requests.ConnectionError)	
+
+            
             if(key == 113 ):
                 print("\n\n\n\nEXITING!!!!!!!!!\n\n\n")
 
