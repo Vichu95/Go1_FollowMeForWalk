@@ -9,8 +9,9 @@ app = Flask(__name__)
 ## WebApp Variables
 ####
 frame_data = None
-webapp_var_objdetected = 0
+webapp_var_STOP_followme = 0
 triggered_value = None
+current_value = None
 
 
 ####
@@ -18,11 +19,7 @@ triggered_value = None
 ####
 @app.route('/')
 def index():
-    return render_template('index.html',
-                           webapp_var_objdetected=webapp_var_objdetected
-                           
-                           
-                           )
+    return render_template('index.html')
 
 
 ##########################
@@ -30,34 +27,54 @@ def index():
 ##########################
 @app.route('/update_value', methods=['POST'])
 def update_value():
-    global webapp_var_objdetected
-    if request.form.get('webapp_var_objdetected'):
-        webapp_var_objdetected = request.form.get('webapp_var_objdetected')
-        return jsonify({'status': 'Value updated successfully', 'new_value': webapp_var_objdetected})
+    global current_value
+    new_value = request.form.get('new_value')
+    if new_value:
+        current_value = new_value
+        return jsonify({'status': 'Value updated successfully', 'new_value': new_value})
     else:
         return jsonify({'status': 'Failed to update value'}), 400
 
+@app.route('/get_value', methods=['GET'])
+def get_value():
+    global current_value
+    return jsonify({'value': current_value})
 
 
-###############################
-##    B U T T O N   R E A D 
-###############################
-@app.route('/trigger_value', methods=['POST'])
-def trigger_value():
-    global triggered_value
-    data = request.json  # Extract JSON data from the request
-    if data:
-        value = data.get('value')
-        print("Received value:", value)  # Log the received value
-        triggered_value = value
-        return 'Value triggered successfully' , 200
-    else:
-        return 'No data received', 400  # Return an error response if no data is received
 
-@app.route('/get_triggered_value', methods=['GET'])
-def get_triggered_value():
-    global triggered_value
-    return jsonify({'triggered_value': triggered_value})
+# ###############################
+# ##    B U T T O N   R E A D 
+# ###############################
+# @app.route('/trigger_STOP', methods=['POST'])
+# def trigger_STOP():
+#     global triggered_value
+#     data = request.json  # Extract JSON data from the request
+#     if data:
+#         value = data.get('value')
+#         print("Received value:", value)  # Log the received value
+#         triggered_value = value
+#         return 'Value triggered successfully' , 200
+#     else:
+#         return 'No data received', 400  # Return an error response if no data is received
+
+# @app.route('/get_triggered_value', methods=['GET'])
+# def get_triggered_value():
+#     global triggered_value
+#     return jsonify({'triggered_value': triggered_value})
+
+
+
+####################################
+##    T R I G G E R     S T O P
+####################################
+
+@app.route('/execute_script')
+def execute_script():
+    # Code to run a script on your laptop
+    os.system("python3 stop.py")
+    # return 'Script executed successfully'
+    return jsonify({'status': 'Script executed successfully', 'output': 'success'})
+ 
 
 
 ##########################
@@ -89,21 +106,6 @@ def generate_frames():
 def video_feed():
     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-
-
-
-
-@app.route('/start_session')
-def start_session():
-    # Start a new tmux session with your command
-    os.system("tmux new-session -d -s my_session_name 'stopgo1'")
-    return 'Session started successfully'
-
-@app.route('/stop_session')
-def stop_session():
-    # Kill the tmux session
-    os.system("tmux kill-session -t my_session_name")
-    return 'Session stopped successfully'
 
 
 

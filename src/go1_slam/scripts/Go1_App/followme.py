@@ -5,7 +5,8 @@ import numpy as np
 def capture_camera_and_send():
     cap = cv2.VideoCapture(0)
 
-    while True:
+    triggered_value = ''
+    while triggered_value != 'STOP':
         ret, frame = cap.read()
         if not ret:
             print("Failed to capture frame")
@@ -21,7 +22,7 @@ def capture_camera_and_send():
 
         # Send the frame to the Flask server
         try:
-            response = requests.post('http://127.0.0.1:5000/update_frame', data=frame_bytes)
+            response = requests.post('http://10.201.0.237:5000/update_frame', data=frame_bytes)
             if response.status_code != 200:
                 print("Failed to send frame to server")
         except requests.exceptions.RequestException as e:
@@ -29,25 +30,18 @@ def capture_camera_and_send():
             
     
         try:
-            response = requests.get('http://127.0.0.1:5000/get_triggered_value')
+            response = requests.get('http://10.201.0.237:5000/get_value')
             data = response.json()
 
             print(data)
-            triggered_value = data.get('triggered_value')
+            triggered_value = data.get('value')
             print("Triggered Value:", triggered_value)
 
 
 
             if(triggered_value == 'STOP'):
-        
-                try:
-                    response = requests.post('http://127.0.0.1:5000/update_value', data={'webapp_var_objdetected': 5})
-                    if response.status_code == 200:
-                        print("Value updated successfully")
-                    else:
-                        print("Failed to update value python")
-                except requests.exceptions.RequestException as e:
-                    print("Error sending request:", e)
+                print("STOPPINGGG!!")
+                response = requests.post('http://10.201.0.237:5000/update_value', data={'new_value': 'Init'})
 
 
 

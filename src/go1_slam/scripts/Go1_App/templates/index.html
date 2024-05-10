@@ -20,12 +20,6 @@
             color: #5018d4; /* Change heading color to blue */
             font-size: 1.5cm;
         }
-        #content {
-            display: flex;
-            justify-content: space-between; /* Distribute items evenly */
-            width: 80%; /* Set width of content */
-            margin-top: 20px; /* Add space between header and content */
-        }
         .column {
             width: 45%; /* Set width of each column */
         }
@@ -38,7 +32,7 @@
         #button-container {
             margin-top: 20px; /* Add space above button */
         }
-        #triggerButton {
+        #executeButton {
             padding: 15px 30px; /* Increase padding for height */
             width: 100%; /* Make button wider */
             font-size: 30px;
@@ -63,64 +57,23 @@
 
 
 
-    <div id="button-container">
-        <button id="triggerButton" onclick="triggerValue()">STOP</button>
+
+   <form action="/execute_script" method="GET">
+      <button id="executeButton"  type="submit">Run Script</button>
+    </form>
+
+    <!-- <div id="button-container">
+        <button id="executeButton" onclick="triggerStopRequest()">STOP</button>
 
     </div>
 
-
-    <form id="startForm" action="/start_session" method="GET">
-        <button type="submit">Start Session</button>
-    </form>
-    
-    <form id="stopForm" action="/stop_session" method="GET">
-        <button type="submit">Stop Session</button>
-    </form>
-
-
-
     <script>
-        function triggerValue() {
-            fetch('/trigger_value', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ value: 'STOP' })
-            })
-            .then(response => {
-                if (response.ok) {
-                    console.log("Value triggered successfully");
-                } else {
-                    console.error("Failed to trigger value");
-                }
-            })
-            .catch(error => {
-                console.error("Error triggering value:", error);
+        document.getElementById('executeButton').addEventListener('click', function() {
+            fetch('/execute_script', {
+                method: 'POST'
             });
-        }
-    </script>
+        });
+    </script> -->
 
-    <script>
-        // Function to handle form submission and display response
-        function handleSubmit(event) {
-            event.preventDefault();
-            var form = event.target;
-            var action = form.getAttribute('action');
-            fetch(action)
-                .then(response => response.text())
-                .then(data => {
-                    document.getElementById('response').innerText = data;
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                });
-        }
-
-        // Attach event listeners to forms
-        document.getElementById('startForm').addEventListener('submit', handleSubmit);
-        document.getElementById('stopForm').addEventListener('submit', handleSubmit);
-        document.getElementById('statusForm').addEventListener('submit', handleSubmit);
-    </script>
 </body>
 </html>
