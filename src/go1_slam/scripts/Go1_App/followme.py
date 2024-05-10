@@ -30,7 +30,7 @@ def capture_camera_and_send():
             
     
         try:
-            response = requests.get('http://10.201.0.237:5000/get_value')
+            response = requests.get('http://10.201.0.237:5000/get_stopcmd_value')
             data = response.json()
 
             print(data)
@@ -41,7 +41,7 @@ def capture_camera_and_send():
 
             if(triggered_value == 'STOP'):
                 print("STOPPINGGG!!")
-                response = requests.post('http://10.201.0.237:5000/update_value', data={'new_value': 'Init'})
+                response = requests.post('http://10.201.0.237:5000/update_value', data={'stop_request_cmd': 'Init'})
 
 
 

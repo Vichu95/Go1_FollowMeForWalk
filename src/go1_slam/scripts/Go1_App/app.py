@@ -2,6 +2,8 @@ from flask import Flask, render_template, Response, jsonify,request
 import numpy as np
 import cv2
 import os
+import stop
+
 
 app = Flask(__name__)
 
@@ -9,9 +11,7 @@ app = Flask(__name__)
 ## WebApp Variables
 ####
 frame_data = None
-webapp_var_STOP_followme = 0
-triggered_value = None
-current_value = None
+webapp_var_STOP_followme = None
 
 
 ####
@@ -25,20 +25,20 @@ def index():
 ##########################
 ##     V A R   R E A D 
 ##########################
-@app.route('/update_value', methods=['POST'])
-def update_value():
-    global current_value
-    new_value = request.form.get('new_value')
+@app.route('/update_stopcmd_value', methods=['POST'])
+def update_stopcmd_value():
+    global webapp_var_STOP_followme
+    new_value = request.form.get('stop_request_cmd')
     if new_value:
-        current_value = new_value
-        return jsonify({'status': 'Value updated successfully', 'new_value': new_value})
+        webapp_var_STOP_followme = new_value
+        return jsonify({'status': 'Value updated successfully', 'stop_request_cmd': new_value})
     else:
         return jsonify({'status': 'Failed to update value'}), 400
 
-@app.route('/get_value', methods=['GET'])
-def get_value():
-    global current_value
-    return jsonify({'value': current_value})
+@app.route('/get_stopcmd_value', methods=['GET'])
+def get_stopcmd_value():
+    global webapp_var_STOP_followme
+    return jsonify({'stop_request_cmd': webapp_var_STOP_followme})
 
 
 
@@ -49,9 +49,12 @@ def get_value():
 @app.route('/execute_script', methods=['POST'])
 def execute_script():
     # Code to run a script on your laptop
-    os.system("python3 stop.py")
+    # os.system("python3 stop.py")
+    result = stop.stop_func()
+
+
     # return 'Script executed successfully'
-    return jsonify({'status': 'Script executed successfully', 'output': 'success'})
+    return jsonify({'status': result, 'output': 'success'})
  
 
 

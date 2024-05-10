@@ -1,25 +1,38 @@
-
 import requests
+import subprocess
+import time
+import os
 
+def stop_func():
 
+    print("Stopping...")
 
-
-
-if __name__ == '__main__':
-
-    print("STOP .py started executing....")
-
+    log = ''
 
     try:
-        response = requests.post('http://10.201.0.237:5000/update_value', data={'new_value': 'STOP'})
+        response = requests.post('http://192.168.12.65:5000/update_stopcmd_value', data={'stop_request_cmd': 'STOP'})
         if response.status_code == 200:
-            print("Value updated successfully")
+            log += "\nStop trigger to followme : success"
         else:
-            print("Failed to update value python")
+            log += "\nStop trigger to followme : failed"
     except requests.exceptions.RequestException as e:
-        print("Error sending request:", e)
+        log += "\nError sending Stop trigger to followme:", e
 
 
+    time.sleep(0.3)
 
+    cmd = "rostopic pub /cmd_vel geometry_msgs/Twist '{linear: {x: 0.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}'"
     
-    print("STOP .py stopped executing....")
+    
+    # os.system("tmux new-session -d -s my_session_name '" + cmd + "'")
+    # os.system("tmux new-session -d -s my_session_name 'rostopic pub /cmd_vel geometry_msgs/Twist \'{linear: {x: 0.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}\''")
+    #subprocess.run(cmd, shell=True)
+
+    log +=  "\nPublishing zero cmd_vel for safety..."
+    
+    log += "\nStopped!"
+
+    print (log)
+
+    return log
+
