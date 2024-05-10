@@ -16,23 +16,38 @@ def stop_func():
         else:
             log += "\nStop trigger to followme : failed"
     except requests.exceptions.RequestException as e:
-        log += "\nError sending Stop trigger to followme:", e
+        print("\nError sending Stop trigger to followme:", e)
+        log += "\nError sending Stop trigger to followme."
 
 
     time.sleep(0.3)
 
-    cmd = "rostopic pub /cmd_vel geometry_msgs/Twist '{linear: {x: 0.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}'"
-    
-    
-    # os.system("tmux new-session -d -s my_session_name '" + cmd + "'")
-    # os.system("tmux new-session -d -s my_session_name 'rostopic pub /cmd_vel geometry_msgs/Twist \'{linear: {x: 0.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}\''")
-    #subprocess.run(cmd, shell=True)
 
     log +=  "\nPublishing zero cmd_vel for safety..."
+    
+    rostopic_cmd = "rostopic pub -1 /cmd_vel geometry_msgs/Twist '{linear: {x: 0.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}'"
+
+    os.system(rostopic_cmd)
+
     
     log += "\nStopped!"
 
     print (log)
 
     return log
+
+
+
+
+
+
+
+
+##################
+##   M A I N
+##################
+if __name__ == '__main__':
+    stop_func()
+
+
 

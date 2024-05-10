@@ -23,15 +23,15 @@ import requests
 ################################################################
 
 ## Go1
-MIN_VEL_FOLLOME_POS = 0.17
-MIN_VEL_FOLLOME_NEG = -0.17
-ANG_VEL_FOLLOME_POS = 0.7
-ANG_VEL_FOLLOME_NEG = -0.7
+MIN_VEL_FOLLOME_POS = 0.25
+MIN_VEL_FOLLOME_NEG = -0.25
+ANG_VEL_FOLLOME_POS = 0.9
+ANG_VEL_FOLLOME_NEG = -0.9
 
 
 ## Object detection
 OBJECT_DETECTION_ACCURACY_THRESHOLD = 40
-DIST_PERSON_CAMERA_TOBEKEPT = 100
+DIST_PERSON_CAMERA_TOBEKEPT = 60
 DIST_PERSON_CAMERA_DIFF_THRESHOLD = 10
 DIST_FROM_CAMERA_CENTRE_THRESHOLD = 84 #Image width/8 . Reinitialized in init
 
@@ -453,12 +453,14 @@ class FollowMe_Go1():
 
             
             try:
-                response = requests.get('http://192.168.12.65:5000/get_triggered_value')
+                response = requests.get('http://192.168.12.65:5000/get_stopcmd_value')
                 data = response.json()
+                print(data)
 
-                if(data.get('triggered_value') == 'STOP'):           
+                if(data.get('stop_request_cmd') == 'STOP'):           
                     key = 113
                     print("STOP received ")
+                    response = requests.post('http://192.168.12.65:5000/update_stopcmd_value', data={'stop_request_cmd': 'Init'})
 
             except requests.ConnectionError:
                 print("")

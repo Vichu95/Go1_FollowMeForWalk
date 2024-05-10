@@ -22,7 +22,7 @@ def capture_camera_and_send():
 
         # Send the frame to the Flask server
         try:
-            response = requests.post('http://10.201.0.237:5000/update_frame', data=frame_bytes)
+            response = requests.post('http://192.168.12.65:5000//update_frame', data=frame_bytes)
             if response.status_code != 200:
                 print("Failed to send frame to server")
         except requests.exceptions.RequestException as e:
@@ -30,7 +30,7 @@ def capture_camera_and_send():
             
     
         try:
-            response = requests.get('http://10.201.0.237:5000/get_stopcmd_value')
+            response = requests.get('http://192.168.12.65:5000//get_stopcmd_value')
             data = response.json()
 
             print(data)
@@ -41,7 +41,7 @@ def capture_camera_and_send():
 
             if(triggered_value == 'STOP'):
                 print("STOPPINGGG!!")
-                response = requests.post('http://10.201.0.237:5000/update_value', data={'stop_request_cmd': 'Init'})
+                response = requests.post('http://192.168.12.65:5000//update_value', data={'stop_request_cmd': 'Init'})
 
 
 
