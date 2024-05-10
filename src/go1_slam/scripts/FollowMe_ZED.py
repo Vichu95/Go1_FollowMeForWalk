@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/home/unitree/Documents/python38_venv/bin/python
 
 ################################################################
 ##############    I N C L U D E S 
@@ -9,6 +9,7 @@ import pyzed.sl as sl
 
 #ROS
 import rospy
+from geometry_msgs.msg import Twist
 
 import cv2
 import numpy as np
@@ -20,7 +21,11 @@ import numpy as np
 ##############    M A C R O S
 ################################################################
 
-
+## Go1
+MIN_VEL_FOLLOME_POS = 0.111
+MIN_VEL_FOLLOME_NEG = -0.111
+ANG_VEL_FOLLOME_POS = 0.25
+ANG_VEL_FOLLOME_NEG = -0.25
 
 
 ## Object detection
@@ -62,6 +67,14 @@ class FollowMe_Go1():
 
     def __init__(self):
         
+
+        ######
+        ## ROS INIT
+        ######
+        rospy.init_node('FollowMe_Go1', anonymous=False)
+        self.followme_cmdvel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
+
+
         ######
         ## CAMERA INIT
         ######
@@ -141,7 +154,8 @@ class FollowMe_Go1():
         zed_runtime_param = sl.RuntimeParameters()
         zed_runtime_param.sensing_mode = sl.SENSING_MODE.STANDARD # Preserves edges and depth accuracy
 
-        
+        ## Safe value for person detected. Only set true, if the frame is read properly and person detected
+        self.person_detected = False
 
         if self.zed.grab(zed_runtime_param) == sl.ERROR_CODE.SUCCESS:
 
@@ -230,7 +244,7 @@ class FollowMe_Go1():
                     # Calculate centre point of the detected person
                     print("Person centre : ",self.BB_MIDDLE_BOTTOM_LINE[POINT_X])
                     self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.BB_MIDDLE_BOTTOM_LINE[POINT_X],0), (self.BB_MIDDLE_BOTTOM_LINE[POINT_X],self.image_height), color_ip=COLOR_GREEN)
-        
+
 
         else:
             print("\nZED Grab function failed.\n")
@@ -291,62 +305,101 @@ class FollowMe_Go1():
 
     def following(self):
 
-        print("Following the person ")
-
-        # Calculate the depth difference from distance to be kept and current depth
-        depth_diff_flag = False
-        depth_diff = 0
-        if(abs(self.person_depth - DIST_PERSON_CAMERA_TOBEKEPT) > DIST_PERSON_CAMERA_DIFF_THRESHOLD):
-            depth_diff = self.person_depth - DIST_PERSON_CAMERA_TOBEKEPT
-            depth_diff_flag = True
-
-        print("Depth Flag : ", depth_diff_flag, " Depth Difference : ", depth_diff)
-
-        if(depth_diff_flag):
-            # If difference is greater than threshold, move forward
-            if(depth_diff > 0):
-                print("Move forward")
-                self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'up' )
-        
-            # If less, move backward
-            if(depth_diff < 0):
-                print("Move backward")
-                self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'down' )
-
-        else:
-            print("Depth Maintained")
+        ## Declare the cmd_vel variable
+        followme_cmd_vel = Twist()
+        # Initialize all velocities to zero
+        followme_cmd_vel.linear.x = 0.0
+        followme_cmd_vel.linear.y = 0.0
+        followme_cmd_vel.linear.z = 0.0
+        followme_cmd_vel.angular.x = 0.0
+        followme_cmd_vel.angular.y = 0.0
+        followme_cmd_vel.angular.z = 0.0
 
 
 
+        # Check if human is detected
+        if(self.person_detected):
 
-        # Calculate the angle difference from distance to be kept and current distance from centre
-        centre_deviation_flag = False
-        centre_deviation = 0
+            print("Following the person ")
 
-        if(abs(self.image_vertical_centre_xpoint - self.BB_MIDDLE_BOTTOM_LINE[POINT_X]) > DIST_FROM_CAMERA_CENTRE_THRESHOLD) :
-            centre_deviation = self.image_vertical_centre_xpoint - self.BB_MIDDLE_BOTTOM_LINE[POINT_X]
-            centre_deviation_flag = True
+            # Calculate the depth difference from distance to be kept and current depth
+            depth_diff_flag = False
+            depth_diff = 0
+            if(abs(self.person_depth - DIST_PERSON_CAMERA_TOBEKEPT) > DIST_PERSON_CAMERA_DIFF_THRESHOLD):
+                depth_diff = self.person_depth - DIST_PERSON_CAMERA_TOBEKEPT
+                depth_diff_flag = True
 
-        print("Centre Deviation Flag : ", centre_deviation_flag, " Centre Deviation : ", centre_deviation)
+            print("Depth Flag : ", depth_diff_flag, " Depth Difference : ", depth_diff)
+
+            if(depth_diff_flag):
+                # If difference is greater than threshold, move forward
+                if(depth_diff > 0):
+                    print("Move forward")
+                    followme_cmd_vel.linear.x = MIN_VEL_FOLLOME_POS
+                    self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'up' )
+            
+                # If less, move backward
+                if(depth_diff < 0):
+                    print("Move backward")
+                    followme_cmd_vel.linear.x = MIN_VEL_FOLLOME_NEG
+                    self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'down' )
+
+            else:
+                print("Depth Maintained")
+                followme_cmd_vel.linear.x = 0.0
 
 
-        if(centre_deviation_flag):
-            # If difference is greater than threshold, move right
-            if(centre_deviation > 0):
-                print("Move Right")
-                self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'right' )
-        
-            # If less, move left
-            if(centre_deviation < 0):
-                print("Move Left")
-                self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left' )
 
-        else:
-            print("Centre Maintained")
 
-        
+            # Calculate the angle difference from distance to be kept and current distance from centre
+            centre_deviation_flag = False
+            centre_deviation = 0
 
-        
+            if(abs(self.image_vertical_centre_xpoint - self.BB_MIDDLE_BOTTOM_LINE[POINT_X]) > DIST_FROM_CAMERA_CENTRE_THRESHOLD) :
+                centre_deviation = self.image_vertical_centre_xpoint - self.BB_MIDDLE_BOTTOM_LINE[POINT_X]
+                centre_deviation_flag = True
+
+            print("Centre Deviation Flag : ", centre_deviation_flag, " Centre Deviation : ", centre_deviation)
+
+
+            if(centre_deviation_flag):
+                # If difference is greater than threshold, move right
+                if(centre_deviation > 0):
+                    print("Move Right")
+
+                    if(depth_diff > 0):
+                        followme_cmd_vel.angular.z = ANG_VEL_FOLLOME_NEG
+                    else:
+                        followme_cmd_vel.angular.z = ANG_VEL_FOLLOME_POS
+
+
+
+                    self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'right' )
+            
+                # If less, move left
+                if(centre_deviation < 0):
+                    print("Move Left")                
+
+
+                    if(depth_diff > 0):
+                        followme_cmd_vel.angular.z = ANG_VEL_FOLLOME_POS
+                    else:
+                        followme_cmd_vel.angular.z = ANG_VEL_FOLLOME_NEG
+
+
+                    self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left' )
+
+            else:
+                print("Centre Maintained")
+                followme_cmd_vel.angular.z = 0.0
+
+        #else:
+        # Reset as no person seen
+        # Not explicitly resetting as its already zero as init value
+
+        ## Publish cmd vel
+
+        self.followme_cmdvel_pub.publish(followme_cmd_vel)       
 
 
     def followme_run(self):
@@ -445,6 +498,7 @@ if __name__ == "__main__":
     followme_go1 = FollowMe_Go1()
 
     followme_go1.followme_run()
+
 
 
 
