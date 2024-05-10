@@ -57,23 +57,25 @@
 
 
 
+    <div id="button-container">
+        <button id="executeButton">Run Script</button>
+    </div>
 
-   <form action="/execute_script" method="GET">
-      <button id="executeButton"  type="submit">Run Script</button>
-    </form>
-
-    <!-- <div id="button-container">
-        <button id="executeButton" onclick="triggerStopRequest()">STOP</button>
-
+    <div id="result-container">
+        <!-- Script execution result will be displayed here -->
     </div>
 
     <script>
-        document.getElementById('executeButton').addEventListener('click', function() {
-            fetch('/execute_script', {
-                method: 'POST'
+        $(document).ready(function() {
+            $('#executeButton').click(function() {
+                // Send a POST request to execute the script
+                $.post('/execute_script', function(data) {
+                    // Display the result on the page
+                    $('#result-container').html(data.status);
+                });
             });
         });
-    </script> -->
+    </script>
 
 </body>
 </html>

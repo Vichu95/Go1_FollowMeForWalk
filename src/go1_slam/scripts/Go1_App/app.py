@@ -42,33 +42,11 @@ def get_value():
 
 
 
-# ###############################
-# ##    B U T T O N   R E A D 
-# ###############################
-# @app.route('/trigger_STOP', methods=['POST'])
-# def trigger_STOP():
-#     global triggered_value
-#     data = request.json  # Extract JSON data from the request
-#     if data:
-#         value = data.get('value')
-#         print("Received value:", value)  # Log the received value
-#         triggered_value = value
-#         return 'Value triggered successfully' , 200
-#     else:
-#         return 'No data received', 400  # Return an error response if no data is received
-
-# @app.route('/get_triggered_value', methods=['GET'])
-# def get_triggered_value():
-#     global triggered_value
-#     return jsonify({'triggered_value': triggered_value})
-
-
-
 ####################################
 ##    T R I G G E R     S T O P
 ####################################
 
-@app.route('/execute_script')
+@app.route('/execute_script', methods=['POST'])
 def execute_script():
     # Code to run a script on your laptop
     os.system("python3 stop.py")
