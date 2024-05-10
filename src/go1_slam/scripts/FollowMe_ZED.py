@@ -30,7 +30,7 @@ ANG_VEL_FOLLOME_NEG = -0.25
 
 ## Object detection
 OBJECT_DETECTION_ACCURACY_THRESHOLD = 40
-DIST_PERSON_CAMERA_TOBEKEPT = 100
+DIST_PERSON_CAMERA_TOBEKEPT = 60
 DIST_PERSON_CAMERA_DIFF_THRESHOLD = 10
 DIST_FROM_CAMERA_CENTRE_THRESHOLD = 84 #Image width/8 . Reinitialized in init
 
@@ -425,6 +425,19 @@ class FollowMe_Go1():
 
             if(key == 113 ):
                 print("\n\n\n\nEXITING!!!!!!!!!\n\n\n")
+
+
+        ## Declare the cmd_vel variable
+        followme_cmd_vel = Twist()
+        # Initialize all velocities to zero
+        followme_cmd_vel.linear.x = 0.0
+        followme_cmd_vel.linear.y = 0.0
+        followme_cmd_vel.linear.z = 0.0
+        followme_cmd_vel.angular.x = 0.0
+        followme_cmd_vel.angular.y = 0.0
+        followme_cmd_vel.angular.z = 0.0
+        ## Publish cmd vel
+        self.followme_cmdvel_pub.publish(followme_cmd_vel)
                 
 
 
