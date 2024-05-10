@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Follow Me App</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        /* CSS for positioning elements */
+        body {
+            margin: 0; /* Reset default margin */
+            padding: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center items horizontally */
+            justify-content: center; /* Center items vertically */           
+        }
+        h1 {
+            color: #5018d4; /* Change heading color to blue */
+            font-size: 1.5cm;
+        }
+        #content {
+            display: flex;
+            justify-content: space-between; /* Distribute items evenly */
+            width: 80%; /* Set width of content */
+            margin-top: 20px; /* Add space between header and content */
+        }
+        .column {
+            width: 45%; /* Set width of each column */
+        }
+        .text-bold {
+            font-weight: bold; /* Make text bold */
+        }
+        #video-container {
+            margin-bottom: 20px; /* Add space below video */
+        }
+        #button-container {
+            margin-top: 20px; /* Add space above button */
+        }
+        #triggerButton {
+            padding: 15px 30px; /* Increase padding for height */
+            width: 100%; /* Make button wider */
+            font-size: 30px;
+            background-color: red; /* Set background color to red */
+            color: black; /* Set text color to black */
+            border: none;
+            cursor: pointer;
+            font-weight: bold; /* Make text bold */
+        }
+    </style>
+</head>
+<body>
+    <h1>Follow Me</h1>
+
+
+
+
+
+    <div id="video-container">
+        <img id="video" src="{{ url_for('video_feed') }}">
+    </div>
+
+
+
+    <div id="button-container">
+        <button id="triggerButton" onclick="triggerValue()">STOP</button>
+
+    </div>
+
+
+    <form id="startForm" action="/start_session" method="GET">
+        <button type="submit">Start Session</button>
+    </form>
+    
+    <form id="stopForm" action="/stop_session" method="GET">
+        <button type="submit">Stop Session</button>
+    </form>
+
+
+
+    <script>
+        function triggerValue() {
+            fetch('/trigger_value', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ value: 'STOP' })
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log("Value triggered successfully");
+                } else {
+                    console.error("Failed to trigger value");
+                }
+            })
+            .catch(error => {
+                console.error("Error triggering value:", error);
+            });
+        }
+    </script>
+
+    <script>
+        // Function to handle form submission and display response
+        function handleSubmit(event) {
+            event.preventDefault();
+            var form = event.target;
+            var action = form.getAttribute('action');
+            fetch(action)
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('response').innerText = data;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        // Attach event listeners to forms
+        document.getElementById('startForm').addEventListener('submit', handleSubmit);
+        document.getElementById('stopForm').addEventListener('submit', handleSubmit);
+        document.getElementById('statusForm').addEventListener('submit', handleSubmit);
+    </script>
+</body>
+</html>
