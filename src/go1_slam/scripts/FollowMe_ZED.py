@@ -49,6 +49,7 @@ DIST_PERSON_CAMERA_TOO_CLOSE = 40
 DIST_PERSON_CAMERA_VERY_FAR = 250
 DIST_FROM_CAMERA_CENTRE_THRESHOLD = (int(ZED_IMAGE_WIDTH * 0.125))
 DIST_FROM_CAMERA_CENTRE_TOO_FAR = (int(ZED_IMAGE_WIDTH * 0.375))
+DIST_FROM_CAMERA_CENTRE_NEAR = (int(ZED_IMAGE_WIDTH * 0.0625))
 
 POINT_X= 0
 POINT_Y = 1
@@ -60,7 +61,7 @@ POINT_BOTTOM_LEFT = 3
 CENTRE_MAINTAINED = 0
 CENTRE_ERR_DEBOUNCING = 1
 CENTRE_CORRECTING = 2
-CENTRE_ERR_DEBOUNCE_THRESHOLD = 3
+CENTRE_ERR_DEBOUNCE_THRESHOLD = 7
 
 
 ## OpenCV
@@ -109,6 +110,7 @@ DIST_PERSON_CAMERA_TOO_CLOSE = 40
 DIST_PERSON_CAMERA_VERY_FAR = 150
 DIST_FROM_CAMERA_CENTRE_THRESHOLD = (int(ZED_IMAGE_WIDTH * 0.125))
 DIST_FROM_CAMERA_CENTRE_TOO_FAR = (int(ZED_IMAGE_WIDTH * 0.375))
+DIST_FROM_CAMERA_CENTRE_NEAR = (int(ZED_IMAGE_WIDTH * 0.0625))
 
 ################################################################
 ##############    C L A S S E S
@@ -198,6 +200,9 @@ class FollowMe_Go1():
         self.state = 'INIT'
         self.person_detected = False
 
+        self.centre_deviation_flag = CENTRE_MAINTAINED
+        self.centre_deviation_cntr = 0
+
 
     def capture_camera(self):
 
@@ -243,6 +248,15 @@ class FollowMe_Go1():
             if objects_detected.is_new :
                 objects_detected_array = objects_detected.object_list
                 print("\n\n\nObject(s) detected = " + str(len(objects_detected_array)))
+
+
+
+                print("\n\n " + str(len(objects_detected_array))+" Object(s) detected\n")
+                for object_detected in objects_detected_array:
+                    print("Object attributes:")
+                    print(" Label '"+repr(object_detected.label)+"' (conf. "+str(int(object_detected.confidence))+"/100)")
+                    print(" Tracking ID: "+str(int(object_detected.id))+" tracking state: "+repr(object_detected.tracking_state)+" / "+repr(object_detected.action_state))
+                    
 
                 if len(objects_detected_array) > 0 :
                     
@@ -391,13 +405,23 @@ class FollowMe_Go1():
 
 
             # Calculate the angle difference from distance to be kept and current distance from centre
-            centre_deviation_flag = False
             centre_deviation = self.image_vertical_centre_xpoint - self.BB_MIDDLE_BOTTOM_LINE[POINT_X]
 
-            if(abs(self.image_vertical_centre_xpoint - self.BB_MIDDLE_BOTTOM_LINE[POINT_X]) > DIST_FROM_CAMERA_CENTRE_THRESHOLD) :
-                centre_deviation_flag = True
+            if((abs(self.image_vertical_centre_xpoint - self.BB_MIDDLE_BOTTOM_LINE[POINT_X]) > DIST_FROM_CAMERA_CENTRE_THRESHOLD)
+               and self.centre_deviation_flag != CENTRE_CORRECTING):
+                self.centre_deviation_flag = CENTRE_ERR_DEBOUNCING
+                self.centre_deviation_cntr += 1
 
-            print("Centre Deviation Flag : ", centre_deviation_flag, " Centre Deviation : ", centre_deviation)
+                ## If too far, no need of debouncing
+                if(abs(centre_deviation) > DIST_FROM_CAMERA_CENTRE_TOO_FAR):
+                    self.centre_deviation_flag = CENTRE_CORRECTING
+                    self.centre_deviation_cntr = CENTRE_ERR_DEBOUNCE_THRESHOLD
+            else:
+                self.centre_deviation_cntr = 0
+
+
+
+            print("Centre Deviation Flag : ", self.centre_deviation_flag, " Centre Deviation : ", centre_deviation, " Counter : ",self.centre_deviation_cntr)
 
 
 
@@ -443,8 +467,8 @@ class FollowMe_Go1():
 
 
 
-
-            if(centre_deviation_flag):
+            ## Only move left/right if the debounce threshold is reached
+            if(self.centre_deviation_flag == CENTRE_CORRECTING):
 
                 #####
                 # Check if the person is too away from centre
@@ -478,9 +502,22 @@ class FollowMe_Go1():
                         followme_cmd_vel.angular.z = ANG_VEL_FOLLOWME_NEG
                         self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left' )
 
+
+                ## Resetting of aligning to centre
+                if(abs(centre_deviation) < DIST_FROM_CAMERA_CENTRE_NEAR):
+                    self.centre_deviation_flag = CENTRE_MAINTAINED
+                    self.centre_deviation_cntr = 0
+                    print("Centre is maintained")
+
             else:
                 print("Centre Maintained")
                 followme_cmd_vel.angular.z = 0.0
+
+                if(self.centre_deviation_cntr >= CENTRE_ERR_DEBOUNCE_THRESHOLD):
+                    self.centre_deviation_flag = CENTRE_CORRECTING
+                elif(self.centre_deviation_cntr == 0):
+                    self.centre_deviation_flag = CENTRE_MAINTAINED
+
 
         #else:
         # Reset as no person seen
