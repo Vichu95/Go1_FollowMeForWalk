@@ -47,8 +47,8 @@ DIST_PERSON_CAMERA_TOBEKEPT = 80
 DIST_PERSON_CAMERA_DIFF_THRESHOLD = 10
 DIST_PERSON_CAMERA_TOO_CLOSE = 40
 DIST_PERSON_CAMERA_VERY_FAR = 250
-DIST_FROM_CAMERA_CENTRE_THRESHOLD = int(ZED_IMAGE_WIDTH/0.125)
-DIST_FROM_CAMERA_CENTRE_TOO_FAR = int(ZED_IMAGE_WIDTH * 0.75)
+DIST_FROM_CAMERA_CENTRE_THRESHOLD = (int(ZED_IMAGE_WIDTH * 0.125))
+DIST_FROM_CAMERA_CENTRE_TOO_FAR = (int(ZED_IMAGE_WIDTH * 0.375))
 
 POINT_X= 0
 POINT_Y = 1
@@ -80,7 +80,35 @@ ARROW_TIP = 0.5
 ARROW_THICKNESS = 12
 
 POS_IMAGE_TOP_LEFT_TEXT = [10,30]
+POS_IMAGE_BOTTOM_RIGHT_TEXT_1 = [370,330]
+POS_IMAGE_BOTTOM_RIGHT_TEXT_2 = [370,360]
 POS_IMAGE_BOTTOM_RIGHT_ARROW = [500,250]
+
+
+
+
+
+## LAB Testing values
+POS_SIGN = 1
+NEG_SIGN = -1
+MIN_VEL_FOLLOWME_POS = 0.111
+MIN_VEL_FOLLOWME_NEG = -0.111
+ANG_VEL_FOLLOWME_POS = 0.3
+ANG_VEL_FOLLOWME_NEG = -0.3
+ANG_VEL_FOLLOWME_PERSON_AT_CAMERA_BOUNDARY = 0.7
+LNR_VEL_FOLLOWME_PERSON_VERY_FAR = 0.3
+LNR_VEL_FOLLOWME_TOO_CLOSE = 0.15
+LNR_VEL_FOLLOWME_OK_MAX = 0.2
+LNR_VEL_FOLLOWME_OK_MIN = 0.15
+LNR_VEL_FOLLOWME_GO_BACK = -0.111
+## Object detection
+OBJECT_DETECTION_ACCURACY_THRESHOLD = 40
+DIST_PERSON_CAMERA_TOBEKEPT = 80
+DIST_PERSON_CAMERA_DIFF_THRESHOLD = 10
+DIST_PERSON_CAMERA_TOO_CLOSE = 40
+DIST_PERSON_CAMERA_VERY_FAR = 150
+DIST_FROM_CAMERA_CENTRE_THRESHOLD = (int(ZED_IMAGE_WIDTH * 0.125))
+DIST_FROM_CAMERA_CENTRE_TOO_FAR = (int(ZED_IMAGE_WIDTH * 0.375))
 
 ################################################################
 ##############    C L A S S E S
@@ -152,7 +180,7 @@ class FollowMe_Go1():
 
         self.image_height = self.zed.get_camera_information().camera_resolution.height
         self.image_width = self.zed.get_camera_information().camera_resolution.width
-        print("ZED image height and width are " + self.image_height + ", " + self.image_width)
+        print("ZED image height and width are " + str(self.image_height) + ", " + str(self.image_width))
 
         if(ZED_IMAGE_HEIGHT != self.image_height or ZED_IMAGE_WIDTH != self.image_width):
             print("Error! Mismatch between zed camera dimensions and code macros. Correct the macros ZED_IMAGE_HEIGHT and ZED_IMAGE_WIDTH .")
@@ -420,7 +448,7 @@ class FollowMe_Go1():
                             speed_slope = (LNR_VEL_FOLLOWME_OK_MAX - LNR_VEL_FOLLOWME_OK_MIN)/(DIST_PERSON_CAMERA_VERY_FAR - DIST_PERSON_CAMERA_TOBEKEPT)
                             followme_cmd_vel.linear.x = depth_diff * speed_slope + MIN_VEL_FOLLOWME_POS
 
-                            print("Slope = " + speed_slope + "linear speed calcualted " + followme_cmd_vel.linear.x)
+                            print("Slope = " + str(speed_slope) + " linear speed calcualted " + str(followme_cmd_vel.linear.x))
 
                             self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'up' )
                 
@@ -461,6 +489,13 @@ class FollowMe_Go1():
         # Not explicitly resetting as its already zero as init value
 
         ## Publish cmd vel
+
+        print(self.followme_cmdvel_pub)
+        temp_display_cmdvel = "Linear x : " + str(followme_cmd_vel.linear.x) + "Angular z : " + str(followme_cmd_vel.angular.z)
+        temp_display_cmdvel = str(followme_cmd_vel.linear.x) + " , " + str(followme_cmd_vel.angular.z)
+        self.camera_raw_op = addOpenCVText(self.camera_raw_op, "Linear x  : " + str(followme_cmd_vel.linear.x)  , POS_IMAGE_BOTTOM_RIGHT_TEXT_1, color_ip=COLOR_GREEN)
+        self.camera_raw_op = addOpenCVText(self.camera_raw_op, "Angular z : " + str(followme_cmd_vel.angular.z)  , POS_IMAGE_BOTTOM_RIGHT_TEXT_2, color_ip=COLOR_GREEN)
+  
 
         #self.followme_cmdvel_pub.publish(followme_cmd_vel)       
 
@@ -604,6 +639,7 @@ if __name__ == "__main__":
     followme_go1 = FollowMe_Go1()
 
     followme_go1.followme_run()
+
 
 
 
