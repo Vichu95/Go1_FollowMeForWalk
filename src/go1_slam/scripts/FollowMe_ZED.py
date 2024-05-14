@@ -446,7 +446,7 @@ class FollowMe_Go1():
                         else:
                             print("Moving forward")
                             speed_slope = (LNR_VEL_FOLLOWME_OK_MAX - LNR_VEL_FOLLOWME_OK_MIN)/(DIST_PERSON_CAMERA_VERY_FAR - DIST_PERSON_CAMERA_TOBEKEPT)
-                            followme_cmd_vel.linear.x = depth_diff * speed_slope + MIN_VEL_FOLLOWME_POS
+                            followme_cmd_vel.linear.x = depth_diff * speed_slope + LNR_VEL_FOLLOWME_OK_MIN
 
                             print("Slope = " + str(speed_slope) + " linear speed calcualted " + str(followme_cmd_vel.linear.x))
 
