@@ -23,17 +23,32 @@ import requests
 ################################################################
 
 ## Go1
-MIN_VEL_FOLLOME_POS = 0.35
-MIN_VEL_FOLLOME_NEG = -0.25
-ANG_VEL_FOLLOME_POS = 0.9
-ANG_VEL_FOLLOME_NEG = -0.9
+POS_SIGN = 1
+NEG_SIGN = -1
+MIN_VEL_FOLLOWME_POS = 0.25
+MIN_VEL_FOLLOWME_NEG = -0.25
+ANG_VEL_FOLLOWME_POS = 0.9
+ANG_VEL_FOLLOWME_NEG = -0.9
+ANG_VEL_FOLLOWME_PERSON_AT_CAMERA_BOUNDARY = 1.0
+LNR_VEL_FOLLOWME_PERSON_VERY_FAR = 0.5
+LNR_VEL_FOLLOWME_TOO_CLOSE = 0.3
+LNR_VEL_FOLLOWME_OK_MAX = 0.4
+LNR_VEL_FOLLOWME_OK_MIN = 0.2
+LNR_VEL_FOLLOWME_GO_BACK = -0.2
 
+
+#ZED
+ZED_IMAGE_HEIGHT = 376
+ZED_IMAGE_WIDTH = 672
 
 ## Object detection
 OBJECT_DETECTION_ACCURACY_THRESHOLD = 40
-DIST_PERSON_CAMERA_TOBEKEPT = 60
+DIST_PERSON_CAMERA_TOBEKEPT = 80
 DIST_PERSON_CAMERA_DIFF_THRESHOLD = 10
-DIST_FROM_CAMERA_CENTRE_THRESHOLD = 84 #Image width/8 . Reinitialized in init
+DIST_PERSON_CAMERA_TOO_CLOSE = 40
+DIST_PERSON_CAMERA_VERY_FAR = 250
+DIST_FROM_CAMERA_CENTRE_THRESHOLD = int(ZED_IMAGE_WIDTH/0.125)
+DIST_FROM_CAMERA_CENTRE_TOO_FAR = int(ZED_IMAGE_WIDTH * 0.75)
 
 POINT_X= 0
 POINT_Y = 1
@@ -42,11 +57,18 @@ POINT_TOP_RIGHT = 1
 POINT_BOTTOM_RIGHT = 2
 POINT_BOTTOM_LEFT = 3
 
+CENTRE_MAINTAINED = 0
+CENTRE_ERR_DEBOUNCING = 1
+CENTRE_CORRECTING = 2
+CENTRE_ERR_DEBOUNCE_THRESHOLD = 3
+
+
 ## OpenCV
 COLOR_BLUE = [255,0,0]
 COLOR_YELLOW = [0,255,255]
 COLOR_GREEN = [0,255,0]
 COLOR_RED = [0,0,255]
+COLOR_ORANGE = [0,165,255]
 
 OBJ_BB_THICKNESS = 2
 DEFAULT_TEXT_SIZE = 1
@@ -130,11 +152,16 @@ class FollowMe_Go1():
 
         self.image_height = self.zed.get_camera_information().camera_resolution.height
         self.image_width = self.zed.get_camera_information().camera_resolution.width
+        print("ZED image height and width are " + self.image_height + ", " + self.image_width)
+
+        if(ZED_IMAGE_HEIGHT != self.image_height or ZED_IMAGE_WIDTH != self.image_width):
+            print("Error! Mismatch between zed camera dimensions and code macros. Correct the macros ZED_IMAGE_HEIGHT and ZED_IMAGE_WIDTH .")
+            self.zed.close()
+            exit()
+
+
         self.image_middle_bottom_line = (int(self.image_width/2), self.image_height)
         self.image_vertical_centre_xpoint = int(self.image_width/2)
-
-        global DIST_FROM_CAMERA_CENTRE_THRESHOLD
-        DIST_FROM_CAMERA_CENTRE_THRESHOLD = int(self.image_width/8)
 
         self.camera_raw_op = np.zeros((self.image_height,self.image_width))
         self.camera_depth_op = ''
@@ -142,6 +169,7 @@ class FollowMe_Go1():
 
         self.state = 'INIT'
         self.person_detected = False
+
 
     def capture_camera(self):
 
@@ -241,6 +269,8 @@ class FollowMe_Go1():
                     self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint,0), (self.image_vertical_centre_xpoint,self.image_height), color_ip=COLOR_YELLOW)
                     self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint-DIST_FROM_CAMERA_CENTRE_THRESHOLD,0), (self.image_vertical_centre_xpoint-DIST_FROM_CAMERA_CENTRE_THRESHOLD,self.image_height), color_ip=COLOR_YELLOW)
                     self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint+DIST_FROM_CAMERA_CENTRE_THRESHOLD,0), (self.image_vertical_centre_xpoint+DIST_FROM_CAMERA_CENTRE_THRESHOLD,self.image_height), color_ip=COLOR_YELLOW)
+                    self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint-DIST_FROM_CAMERA_CENTRE_TOO_FAR,0), (self.image_vertical_centre_xpoint-DIST_FROM_CAMERA_CENTRE_TOO_FAR,self.image_height), color_ip=COLOR_ORANGE)
+                    self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint+DIST_FROM_CAMERA_CENTRE_TOO_FAR,0), (self.image_vertical_centre_xpoint+DIST_FROM_CAMERA_CENTRE_TOO_FAR,self.image_height), color_ip=COLOR_ORANGE)
                 
                     # Calculate centre point of the detected person
                     print("Person centre : ",self.BB_MIDDLE_BOTTOM_LINE[POINT_X])
@@ -325,87 +355,106 @@ class FollowMe_Go1():
 
             # Calculate the depth difference from distance to be kept and current depth
             depth_diff_flag = False
-            depth_diff = 0
-            if(abs(self.person_depth - DIST_PERSON_CAMERA_TOBEKEPT) > DIST_PERSON_CAMERA_DIFF_THRESHOLD):
-                depth_diff = self.person_depth - DIST_PERSON_CAMERA_TOBEKEPT
-                depth_diff_flag = True
-
-            print("Depth Flag : ", depth_diff_flag, " Depth Difference : ", depth_diff)
-
-            if(depth_diff_flag):
-                # If difference is greater than threshold, move forward
-                if(depth_diff > 0):
-                    print("Move forward")
-                    followme_cmd_vel.linear.x = MIN_VEL_FOLLOME_POS
-                    self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'up' )
+            depth_diff = self.person_depth - DIST_PERSON_CAMERA_TOBEKEPT
             
-                # If less, move backward
-                if(depth_diff < 0):
-                    print("Move backward")
-                    followme_cmd_vel.linear.x = MIN_VEL_FOLLOME_NEG
-                    self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'down' )
-
-            else:
-                print("Depth Maintained")
-                followme_cmd_vel.linear.x = 0.0
-
-
+            if(abs(self.person_depth - DIST_PERSON_CAMERA_TOBEKEPT) > DIST_PERSON_CAMERA_DIFF_THRESHOLD):
+                depth_diff_flag = True
+            print("Depth Flag : ", depth_diff_flag, " Depth Difference : ", depth_diff)
 
 
             # Calculate the angle difference from distance to be kept and current distance from centre
             centre_deviation_flag = False
-            centre_deviation = 0
+            centre_deviation = self.image_vertical_centre_xpoint - self.BB_MIDDLE_BOTTOM_LINE[POINT_X]
 
             if(abs(self.image_vertical_centre_xpoint - self.BB_MIDDLE_BOTTOM_LINE[POINT_X]) > DIST_FROM_CAMERA_CENTRE_THRESHOLD) :
-                centre_deviation = self.image_vertical_centre_xpoint - self.BB_MIDDLE_BOTTOM_LINE[POINT_X]
                 centre_deviation_flag = True
 
             print("Centre Deviation Flag : ", centre_deviation_flag, " Centre Deviation : ", centre_deviation)
 
+            #####
+            # Check if the person is too away from centre
+            #####
+            if(abs(centre_deviation) > DIST_FROM_CAMERA_CENTRE_TOO_FAR):
 
-            if(centre_deviation_flag):
-                # If difference is greater than threshold, move right
+                # If difference is greater than 0, move right
                 if(centre_deviation > 0):
-                    print("Person moved to my Right")
-
-                    if(depth_diff_flag):
-                        # Move forward towards right side
-                        if(depth_diff > 0):
-                            followme_cmd_vel.angular.z = ANG_VEL_FOLLOME_POS
-                    
-                        # Move backward towards left side
-                        elif(depth_diff < 0):
-                            followme_cmd_vel.angular.z = ANG_VEL_FOLLOME_POS
-                    else:
-                        ## Only turn right
-                        followme_cmd_vel.angular.z = ANG_VEL_FOLLOME_POS   #working
-
-
-                    self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'right' )
+                    print("Person moved too much to my Right")
+                    ## Only turn right
+                    followme_cmd_vel.angular.z = POS_SIGN * ANG_VEL_FOLLOWME_PERSON_AT_CAMERA_BOUNDARY
+                    self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'right', color_ip=COLOR_ORANGE )
             
                 # If less, move left
                 if(centre_deviation < 0):
-                    print("Person moved to my Left")                
+                    print("Person moved too much to my Left")
+                    ## Only turn left
+                    followme_cmd_vel.angular.z = NEG_SIGN * ANG_VEL_FOLLOWME_PERSON_AT_CAMERA_BOUNDARY 
+                    self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left', color_ip=COLOR_ORANGE )
 
 
-                    if(depth_diff_flag):
-                        # Move forward towards left side
-                        if(depth_diff > 0):
-                            followme_cmd_vel.angular.z = ANG_VEL_FOLLOME_NEG
-                    
-                        # Move backward towards right side
-                        elif(depth_diff < 0):
-                            followme_cmd_vel.angular.z = ANG_VEL_FOLLOME_NEG
-                    else:
-                        ## Only turn left
-                        followme_cmd_vel.angular.z = ANG_VEL_FOLLOME_NEG  #working
+            #####
+            # Check if the person is too close to the robot
+            #####
+            elif(self.person_depth <= DIST_PERSON_CAMERA_TOO_CLOSE):
+                # If less, move backward
+                print("Person is too close. Moving backward")
+                followme_cmd_vel.linear.x = NEG_SIGN * LNR_VEL_FOLLOWME_TOO_CLOSE
+                self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'down', color_ip=COLOR_ORANGE)
 
 
-                    self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left' )
-
+            #####
+            # The normal walking range
+            #####
             else:
-                print("Centre Maintained")
-                followme_cmd_vel.angular.z = 0.0
+
+                if(depth_diff_flag):
+                    # If difference is greater than threshold, move forward
+                    if(depth_diff > 0):
+
+                        if(self.person_depth > DIST_PERSON_CAMERA_VERY_FAR):
+                            print("Moving forward fast as person is far away")
+                            followme_cmd_vel.linear.x = POS_SIGN * LNR_VEL_FOLLOWME_PERSON_VERY_FAR
+                            self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'up', color_ip=COLOR_ORANGE )
+
+                        else:
+                            print("Moving forward")
+                            speed_slope = (LNR_VEL_FOLLOWME_OK_MAX - LNR_VEL_FOLLOWME_OK_MIN)/(DIST_PERSON_CAMERA_VERY_FAR - DIST_PERSON_CAMERA_TOBEKEPT)
+                            followme_cmd_vel.linear.x = depth_diff * speed_slope + MIN_VEL_FOLLOWME_POS
+
+                            print("Slope = " + speed_slope + "linear speed calcualted " + followme_cmd_vel.linear.x)
+
+                            self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'up' )
+                
+                    # If less, move backward
+                    if(depth_diff < 0):
+                        print("Moving backward")
+                        followme_cmd_vel.linear.x = LNR_VEL_FOLLOWME_GO_BACK
+                        self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'down' )
+
+                else:
+                    print("Depth Maintained")
+                    followme_cmd_vel.linear.x = 0.0
+
+
+
+
+                if(centre_deviation_flag):
+                    # If difference is greater than threshold, move right
+                    if(centre_deviation > 0):
+                        print("Person moved to my Right")
+                        followme_cmd_vel.angular.z = ANG_VEL_FOLLOWME_POS
+
+                        self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'right' )
+                
+                    # If less, move left
+                    if(centre_deviation < 0):
+                        print("Person moved to my Left")
+                        followme_cmd_vel.angular.z = ANG_VEL_FOLLOWME_NEG  
+
+                        self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left' )
+
+                else:
+                    print("Centre Maintained")
+                    followme_cmd_vel.angular.z = 0.0
 
         #else:
         # Reset as no person seen
@@ -413,7 +462,7 @@ class FollowMe_Go1():
 
         ## Publish cmd vel
 
-        self.followme_cmdvel_pub.publish(followme_cmd_vel)       
+        #self.followme_cmdvel_pub.publish(followme_cmd_vel)       
 
 
     def followme_run(self):
@@ -555,5 +604,7 @@ if __name__ == "__main__":
     followme_go1 = FollowMe_Go1()
 
     followme_go1.followme_run()
+
+
 
 
