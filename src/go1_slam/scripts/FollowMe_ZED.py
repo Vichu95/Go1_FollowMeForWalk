@@ -199,6 +199,7 @@ class FollowMe_Go1():
 
         self.state = 'INIT'
         self.person_detected = False
+        self.person_tracked_id = 999
 
         self.centre_deviation_flag = CENTRE_MAINTAINED
         self.centre_deviation_cntr = 0
@@ -262,12 +263,13 @@ class FollowMe_Go1():
                     
                     ## TODO : store the id of person being tracked, check if the id is same in detected objects
                     self.person_detected = True
+                    self.person_tracked_id = 
 
                     ## Get the first object
-                    first_object = objects_detected_array[0]
+                    object_being_tracked = objects_detected_array[0]
 
                     # Read the bounding box 2D
-                    self.obj_bb2d = first_object.bounding_box_2d
+                    self.obj_bb2d = object_being_tracked.bounding_box_2d
                     self.obj_bb2d = self.obj_bb2d.astype(int)
                     print('Bounding Box : ' + ' '.join(map(str, self.obj_bb2d)))
 
@@ -285,14 +287,14 @@ class FollowMe_Go1():
                                                        OBJ_BB_THICKNESS                                                       
                                                        )
                     
-                    idText = repr(first_object.label) + " ID: "+ str(int(first_object.id)) + " " + str(int(first_object.confidence)) + "%"
+                    idText = repr(object_being_tracked.label) + " ID: "+ str(int(object_being_tracked.id)) + " " + str(int(object_being_tracked.confidence)) + "%"
                     self.camera_raw_op = addOpenCVText(self.camera_raw_op, idText ,self.BB_CORNER_TOP_RIGHT_TEXT)
 
                     # Make sure the mask is available for detected person
-                    if first_object.mask.is_init():
+                    if object_being_tracked.mask.is_init():
                         
                         # Calcualte the depth value
-                        self.person_depth, depth_map_masked  = self.process_depth(first_object.mask.get_data())
+                        self.person_depth, depth_map_masked  = self.process_depth(object_being_tracked.mask.get_data())
 
                     ## Draw depth line and mention depth
                     depthText = str(self.person_depth) + "cm"
