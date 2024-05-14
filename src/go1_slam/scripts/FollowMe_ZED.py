@@ -61,7 +61,7 @@ POINT_BOTTOM_LEFT = 3
 CENTRE_MAINTAINED = 0
 CENTRE_ERR_DEBOUNCING = 1
 CENTRE_CORRECTING = 2
-CENTRE_ERR_DEBOUNCE_THRESHOLD = 7
+CENTRE_ERR_DEBOUNCE_THRESHOLD = 3
 
 
 ## OpenCV
@@ -530,7 +530,7 @@ class FollowMe_Go1():
         self.camera_raw_op = addOpenCVText(self.camera_raw_op, "Angular z : " + str(followme_cmd_vel.angular.z)  , POS_IMAGE_BOTTOM_RIGHT_TEXT_2, color_ip=COLOR_GREEN)
   
 
-        #self.followme_cmdvel_pub.publish(followme_cmd_vel)       
+        self.followme_cmdvel_pub.publish(followme_cmd_vel)       
 
 
     def followme_run(self):
@@ -672,6 +672,7 @@ if __name__ == "__main__":
     followme_go1 = FollowMe_Go1()
 
     followme_go1.followme_run()
+
 
 
 
