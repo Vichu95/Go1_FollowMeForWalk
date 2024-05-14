@@ -23,7 +23,7 @@ import requests
 ################################################################
 
 ## Go1
-MIN_VEL_FOLLOME_POS = 0.25
+MIN_VEL_FOLLOME_POS = 0.35
 MIN_VEL_FOLLOME_NEG = -0.25
 ANG_VEL_FOLLOME_POS = 0.9
 ANG_VEL_FOLLOME_NEG = -0.9
@@ -439,32 +439,32 @@ class FollowMe_Go1():
 
 
                         
-            # Encode the frame as JPEG
-            _, jpeg = cv2.imencode('.jpg', self.camera_raw_op)
-            frame_bytes = jpeg.tobytes()
+            # # Encode the frame as JPEG
+            # _, jpeg = cv2.imencode('.jpg', self.camera_raw_op)
+            # frame_bytes = jpeg.tobytes()
 
-            # Send the frame to the Flask server
-            try:
-                response = requests.post('http://192.168.12.65:5000/update_frame', data=frame_bytes)
-                if response.status_code != 200:
-                    print("Failed to send frame to server")
-            except requests.exceptions.RequestException as e:
-                print("Error sending frame to server:", e)
+            # # Send the frame to the Flask server
+            # try:
+            #     response = requests.post('http://192.168.12.65:5000/update_frame', data=frame_bytes)
+            #     if response.status_code != 200:
+            #         print("Failed to send frame to server")
+            # except requests.exceptions.RequestException as e:
+            #     print("Error sending frame to server:", e)
 
             
-            try:
-                response = requests.get('http://192.168.12.65:5000/get_stopcmd_value')
-                data = response.json()
-                print(data)
+            # try:
+            #     response = requests.get('http://192.168.12.65:5000/get_stopcmd_value')
+            #     data = response.json()
+            #     print(data)
 
-                if(data.get('stop_request_cmd') == 'STOP'):           
-                    key = 113
-                    print("STOP received ")
-                    response = requests.post('http://192.168.12.65:5000/update_stopcmd_value', data={'stop_request_cmd': 'Init'})
+            #     if(data.get('stop_request_cmd') == 'STOP'):           
+            #         key = 113
+            #         print("STOP received ")
+            #         response = requests.post('http://192.168.12.65:5000/update_stopcmd_value', data={'stop_request_cmd': 'Init'})
 
-            except requests.ConnectionError:
-                print("")
-                # print("Connection error: Failed to connect to the server:",requests.ConnectionError)	
+            # except requests.ConnectionError:
+            #     print("")
+            #     # print("Connection error: Failed to connect to the server:",requests.ConnectionError)	
 
             
             if(key == 113 ):
@@ -555,7 +555,5 @@ if __name__ == "__main__":
     followme_go1 = FollowMe_Go1()
 
     followme_go1.followme_run()
-
-
 
 
