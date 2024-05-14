@@ -399,90 +399,88 @@ class FollowMe_Go1():
 
             print("Centre Deviation Flag : ", centre_deviation_flag, " Centre Deviation : ", centre_deviation)
 
-            #####
-            # Check if the person is too away from centre
-            #####
-            if(abs(centre_deviation) > DIST_FROM_CAMERA_CENTRE_TOO_FAR):
 
-                # If difference is greater than 0, move right
-                if(centre_deviation > 0):
-                    print("Person moved too much to my Right")
-                    ## Only turn right
-                    followme_cmd_vel.angular.z = POS_SIGN * ANG_VEL_FOLLOWME_PERSON_AT_CAMERA_BOUNDARY
-                    self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'right', color_ip=COLOR_ORANGE )
+
+
+            if(depth_diff_flag):
+                # If difference is greater than threshold, move forward
+                if(depth_diff > 0):
+
+                    if(self.person_depth > DIST_PERSON_CAMERA_VERY_FAR):
+                        print("Moving forward fast as person is far away")
+                        followme_cmd_vel.linear.x = POS_SIGN * LNR_VEL_FOLLOWME_PERSON_VERY_FAR
+                        self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'up', color_ip=COLOR_ORANGE )
+
+                    else:
+                        print("Moving forward")
+                        speed_slope = (LNR_VEL_FOLLOWME_OK_MAX - LNR_VEL_FOLLOWME_OK_MIN)/(DIST_PERSON_CAMERA_VERY_FAR - DIST_PERSON_CAMERA_TOBEKEPT)
+                        followme_cmd_vel.linear.x = depth_diff * speed_slope + LNR_VEL_FOLLOWME_OK_MIN
+
+                        print("Slope = " + str(speed_slope) + " linear speed calcualted " + str(followme_cmd_vel.linear.x))
+
+                        self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'up' )
             
-                # If less, move left
-                if(centre_deviation < 0):
-                    print("Person moved too much to my Left")
-                    ## Only turn left
-                    followme_cmd_vel.angular.z = NEG_SIGN * ANG_VEL_FOLLOWME_PERSON_AT_CAMERA_BOUNDARY 
-                    self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left', color_ip=COLOR_ORANGE )
-
-
-            #####
-            # Check if the person is too close to the robot
-            #####
-            elif(self.person_depth <= DIST_PERSON_CAMERA_TOO_CLOSE):
                 # If less, move backward
-                print("Person is too close. Moving backward")
-                followme_cmd_vel.linear.x = NEG_SIGN * LNR_VEL_FOLLOWME_TOO_CLOSE
-                self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'down', color_ip=COLOR_ORANGE)
+                if(depth_diff < 0):
 
+                    #####
+                    # Check if the person is too close to the robot
+                    #####
+                    if(self.person_depth <= DIST_PERSON_CAMERA_TOO_CLOSE):
+                        # If less, move backward
+                        print("Person is too close. Moving backward")
+                        followme_cmd_vel.linear.x = NEG_SIGN * LNR_VEL_FOLLOWME_TOO_CLOSE
+                        self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'down', color_ip=COLOR_ORANGE)
 
-            #####
-            # The normal walking range
-            #####
-            else:
-
-                if(depth_diff_flag):
-                    # If difference is greater than threshold, move forward
-                    if(depth_diff > 0):
-
-                        if(self.person_depth > DIST_PERSON_CAMERA_VERY_FAR):
-                            print("Moving forward fast as person is far away")
-                            followme_cmd_vel.linear.x = POS_SIGN * LNR_VEL_FOLLOWME_PERSON_VERY_FAR
-                            self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'up', color_ip=COLOR_ORANGE )
-
-                        else:
-                            print("Moving forward")
-                            speed_slope = (LNR_VEL_FOLLOWME_OK_MAX - LNR_VEL_FOLLOWME_OK_MIN)/(DIST_PERSON_CAMERA_VERY_FAR - DIST_PERSON_CAMERA_TOBEKEPT)
-                            followme_cmd_vel.linear.x = depth_diff * speed_slope + LNR_VEL_FOLLOWME_OK_MIN
-
-                            print("Slope = " + str(speed_slope) + " linear speed calcualted " + str(followme_cmd_vel.linear.x))
-
-                            self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'up' )
-                
-                    # If less, move backward
-                    if(depth_diff < 0):
+                    else:
                         print("Moving backward")
                         followme_cmd_vel.linear.x = LNR_VEL_FOLLOWME_GO_BACK
                         self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'down' )
 
+            else:
+                print("Depth Maintained")
+                followme_cmd_vel.linear.x = 0.0
+
+
+
+
+            if(centre_deviation_flag):
+
+                #####
+                # Check if the person is too away from centre
+                #####
+                if(abs(centre_deviation) > DIST_FROM_CAMERA_CENTRE_TOO_FAR):
+
+                    # If difference is greater than 0, move right
+                    if(centre_deviation > 0):
+                        print("Person moved too much to my Right")
+                        ## Only turn right
+                        followme_cmd_vel.angular.z = POS_SIGN * ANG_VEL_FOLLOWME_PERSON_AT_CAMERA_BOUNDARY
+                        self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'right', color_ip=COLOR_ORANGE )
+                
+                    # If less, move left
+                    if(centre_deviation < 0):
+                        print("Person moved too much to my Left")
+                        ## Only turn left
+                        followme_cmd_vel.angular.z = NEG_SIGN * ANG_VEL_FOLLOWME_PERSON_AT_CAMERA_BOUNDARY 
+                        self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left', color_ip=COLOR_ORANGE )
+
                 else:
-                    print("Depth Maintained")
-                    followme_cmd_vel.linear.x = 0.0
-
-
-
-
-                if(centre_deviation_flag):
                     # If difference is greater than threshold, move right
                     if(centre_deviation > 0):
                         print("Person moved to my Right")
                         followme_cmd_vel.angular.z = ANG_VEL_FOLLOWME_POS
-
                         self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'right' )
                 
                     # If less, move left
                     if(centre_deviation < 0):
                         print("Person moved to my Left")
-                        followme_cmd_vel.angular.z = ANG_VEL_FOLLOWME_NEG  
-
+                        followme_cmd_vel.angular.z = ANG_VEL_FOLLOWME_NEG
                         self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left' )
 
-                else:
-                    print("Centre Maintained")
-                    followme_cmd_vel.angular.z = 0.0
+            else:
+                print("Centre Maintained")
+                followme_cmd_vel.angular.z = 0.0
 
         #else:
         # Reset as no person seen
@@ -491,8 +489,6 @@ class FollowMe_Go1():
         ## Publish cmd vel
 
         print(self.followme_cmdvel_pub)
-        temp_display_cmdvel = "Linear x : " + str(followme_cmd_vel.linear.x) + "Angular z : " + str(followme_cmd_vel.angular.z)
-        temp_display_cmdvel = str(followme_cmd_vel.linear.x) + " , " + str(followme_cmd_vel.angular.z)
         self.camera_raw_op = addOpenCVText(self.camera_raw_op, "Linear x  : " + str(followme_cmd_vel.linear.x)  , POS_IMAGE_BOTTOM_RIGHT_TEXT_1, color_ip=COLOR_GREEN)
         self.camera_raw_op = addOpenCVText(self.camera_raw_op, "Angular z : " + str(followme_cmd_vel.angular.z)  , POS_IMAGE_BOTTOM_RIGHT_TEXT_2, color_ip=COLOR_GREEN)
   
