@@ -43,6 +43,7 @@ ZED_IMAGE_WIDTH = 672
 
 ## Object detection
 OBJECT_DETECTION_ACCURACY_THRESHOLD = 40
+OBJECT_DETECTION_ACCURACY_THRESHOLD_REASSIGN = 70
 DIST_PERSON_CAMERA_TOBEKEPT = 80
 DIST_PERSON_CAMERA_DIFF_THRESHOLD = 10
 DIST_PERSON_CAMERA_TOO_CLOSE = 40
@@ -63,6 +64,7 @@ CENTRE_ERR_DEBOUNCING = 1
 CENTRE_CORRECTING = 2
 CENTRE_ERR_DEBOUNCE_THRESHOLD = 3
 
+TRACKING_ID_INI = 999
 
 ## OpenCV
 COLOR_BLUE = [255,0,0]
@@ -199,7 +201,7 @@ class FollowMe_Go1():
 
         self.state = 'INIT'
         self.person_detected = False
-        self.person_tracked_id = 999
+        self.person_tracked_id = TRACKING_ID_INI
 
         self.centre_deviation_flag = CENTRE_MAINTAINED
         self.centre_deviation_cntr = 0
@@ -247,78 +249,104 @@ class FollowMe_Go1():
 
             ## Analyzing the objects and getting relevant informations
             if objects_detected.is_new :
+
+
                 objects_detected_array = objects_detected.object_list
                 print("\n\n\nObject(s) detected = " + str(len(objects_detected_array)))
 
 
 
-                print("\n\n " + str(len(objects_detected_array))+" Object(s) detected\n")
-                for object_detected in objects_detected_array:
-                    print("Object attributes:")
-                    print(" Label '"+repr(object_detected.label)+"' (conf. "+str(int(object_detected.confidence))+"/100)")
-                    print(" Tracking ID: "+str(int(object_detected.id))+" tracking state: "+repr(object_detected.tracking_state)+" / "+repr(object_detected.action_state))
-                    
+              
 
                 if len(objects_detected_array) > 0 :
                     
-                    ## TODO : store the id of person being tracked, check if the id is same in detected objects
-                    self.person_detected = True
-                    self.person_tracked_id = 
 
-                    ## Get the first object
+                    ## Temporary initialization
                     object_being_tracked = objects_detected_array[0]
 
-                    # Read the bounding box 2D
-                    self.obj_bb2d = object_being_tracked.bounding_box_2d
-                    self.obj_bb2d = self.obj_bb2d.astype(int)
-                    print('Bounding Box : ' + ' '.join(map(str, self.obj_bb2d)))
+
+                    print("\n\n " + str(len(objects_detected_array))+" Object(s) detected\n")
+
+                    ## Checking if the tracked ID is present in the list
+                    for object_detected in objects_detected_array:
+                        print("Object attributes:")
+                        print(" Label '"+repr(object_detected.label)+"' (conf. "+str(int(object_detected.confidence))+"/100)")
+                        print(" Tracking ID: "+str(int(object_detected.id))+" tracking state: "+repr(object_detected.tracking_state)+" / "+repr(object_detected.action_state))
+                       
+                        if(self.person_tracked_id == int(object_detected.id)):
+                            self.person_detected = True
+                            object_being_tracked = object_detected
+
+                    ## If not present, assign a new id only if there is only one object being detected and confidence is good
+                    if(self.person_detected != True):
+                        if len(objects_detected_array) == 0 :
+                            object_being_tracked = objects_detected_array[0]
+                            if(int(object_being_tracked.confidence) > OBJECT_DETECTION_ACCURACY_THRESHOLD_REASSIGN):
+                                self.person_tracked_id  = int(object_being_tracked.id)
+                                self.person_detected = True
+                            else:
+                                print("The person cannot be tracked as confidence of detection is less!")
+                                self.camera_raw_op = addOpenCVTextAtCentre(self.camera_raw_op, "DETECTION CONFIDENCE IS LESS", color_ip=COLOR_RED)
+  
+                        else:
+                            print("The person cannot be tracked as many objects (PEOPLE) being detected!")
+                            self.camera_raw_op = addOpenCVTextAtCentre(self.camera_raw_op, "TOO MANY DETECTIONS", color_ip=COLOR_RED)
 
 
-                    ## Define points for easier access in drawing images
-                    self.BB_CORNER_TOP_RIGHT_TEXT = (self.obj_bb2d[POINT_TOP_RIGHT][POINT_X], self.obj_bb2d[POINT_TOP_RIGHT][POINT_Y] + DEFAULT_TEXT_PIXEL)
-                    self.BB_MIDDLE_BOTTOM_LINE =  ( self.obj_bb2d[POINT_BOTTOM_LEFT][POINT_X] + int((self.obj_bb2d[POINT_BOTTOM_RIGHT][POINT_X] - self.obj_bb2d[POINT_BOTTOM_LEFT][POINT_X])/2) , self.obj_bb2d[POINT_BOTTOM_RIGHT][POINT_Y])
-                    
+                    ### Proceed with detected person
+                    if(self.person_detected == True):
 
-                    # Draw box
-                    self.camera_raw_op = cv2.rectangle(self.camera_raw_op,
-                                                       [self.obj_bb2d[POINT_TOP_LEFT][POINT_X] , self.obj_bb2d[POINT_TOP_LEFT][POINT_Y] ],
-                                                       [self.obj_bb2d[POINT_BOTTOM_RIGHT][POINT_X] , self.obj_bb2d[POINT_BOTTOM_RIGHT][POINT_Y] ],
-                                                       COLOR_BLUE, 
-                                                       OBJ_BB_THICKNESS                                                       
-                                                       )
-                    
-                    idText = repr(object_being_tracked.label) + " ID: "+ str(int(object_being_tracked.id)) + " " + str(int(object_being_tracked.confidence)) + "%"
-                    self.camera_raw_op = addOpenCVText(self.camera_raw_op, idText ,self.BB_CORNER_TOP_RIGHT_TEXT)
+                        # Read the bounding box 2D
+                        self.obj_bb2d = object_being_tracked.bounding_box_2d
+                        self.obj_bb2d = self.obj_bb2d.astype(int)
+                        print('Bounding Box : ' + ' '.join(map(str, self.obj_bb2d)))
 
-                    # Make sure the mask is available for detected person
-                    if object_being_tracked.mask.is_init():
+
+                        ## Define points for easier access in drawing images
+                        self.BB_CORNER_TOP_RIGHT_TEXT = (self.obj_bb2d[POINT_TOP_RIGHT][POINT_X], self.obj_bb2d[POINT_TOP_RIGHT][POINT_Y] + DEFAULT_TEXT_PIXEL)
+                        self.BB_MIDDLE_BOTTOM_LINE =  ( self.obj_bb2d[POINT_BOTTOM_LEFT][POINT_X] + int((self.obj_bb2d[POINT_BOTTOM_RIGHT][POINT_X] - self.obj_bb2d[POINT_BOTTOM_LEFT][POINT_X])/2) , self.obj_bb2d[POINT_BOTTOM_RIGHT][POINT_Y])
                         
-                        # Calcualte the depth value
-                        self.person_depth, depth_map_masked  = self.process_depth(object_being_tracked.mask.get_data())
 
-                    ## Draw depth line and mention depth
-                    depthText = str(self.person_depth) + "cm"
-                    print("Person Depth : ", depthText)
-                    self.camera_raw_op = addOpenCVLine(self.camera_raw_op, self.image_middle_bottom_line, self.BB_MIDDLE_BOTTOM_LINE, color_ip=COLOR_RED)                    
-                    self.camera_raw_op = addOpenCVText(self.camera_raw_op, depthText, position=(
-                                    int((self.image_middle_bottom_line[0]+ self.BB_MIDDLE_BOTTOM_LINE[0])/2),
-                                    int((self.image_middle_bottom_line[1]+ self.BB_MIDDLE_BOTTOM_LINE[1])/2)),
-                                    color_ip=COLOR_RED
-                                    )
+                        # Draw box
+                        self.camera_raw_op = cv2.rectangle(self.camera_raw_op,
+                                                        [self.obj_bb2d[POINT_TOP_LEFT][POINT_X] , self.obj_bb2d[POINT_TOP_LEFT][POINT_Y] ],
+                                                        [self.obj_bb2d[POINT_BOTTOM_RIGHT][POINT_X] , self.obj_bb2d[POINT_BOTTOM_RIGHT][POINT_Y] ],
+                                                        COLOR_BLUE, 
+                                                        OBJ_BB_THICKNESS                                                       
+                                                        )
+                        
+                        idText = repr(object_being_tracked.label) + " ID: "+ str(int(object_being_tracked.id)) + " " + str(int(object_being_tracked.confidence)) + "%"
+                        self.camera_raw_op = addOpenCVText(self.camera_raw_op, idText ,self.BB_CORNER_TOP_RIGHT_TEXT)
+
+                        # Make sure the mask is available for detected person
+                        if object_being_tracked.mask.is_init():
+                            
+                            # Calcualte the depth value
+                            self.person_depth, depth_map_masked  = self.process_depth(object_being_tracked.mask.get_data())
+
+                        ## Draw depth line and mention depth
+                        depthText = str(self.person_depth) + "cm"
+                        print("Person Depth : ", depthText)
+                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, self.image_middle_bottom_line, self.BB_MIDDLE_BOTTOM_LINE, color_ip=COLOR_RED)                    
+                        self.camera_raw_op = addOpenCVText(self.camera_raw_op, depthText, position=(
+                                        int((self.image_middle_bottom_line[0]+ self.BB_MIDDLE_BOTTOM_LINE[0])/2),
+                                        int((self.image_middle_bottom_line[1]+ self.BB_MIDDLE_BOTTOM_LINE[1])/2)),
+                                        color_ip=COLOR_RED
+                                        )
+                        
+
+
+                        # Calculate centre point of camera and draw the lines for reference
+                        print("Camera centre : ",self.image_vertical_centre_xpoint)
+                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint,0), (self.image_vertical_centre_xpoint,self.image_height), color_ip=COLOR_YELLOW)
+                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint-DIST_FROM_CAMERA_CENTRE_THRESHOLD,0), (self.image_vertical_centre_xpoint-DIST_FROM_CAMERA_CENTRE_THRESHOLD,self.image_height), color_ip=COLOR_YELLOW)
+                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint+DIST_FROM_CAMERA_CENTRE_THRESHOLD,0), (self.image_vertical_centre_xpoint+DIST_FROM_CAMERA_CENTRE_THRESHOLD,self.image_height), color_ip=COLOR_YELLOW)
+                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint-DIST_FROM_CAMERA_CENTRE_TOO_FAR,0), (self.image_vertical_centre_xpoint-DIST_FROM_CAMERA_CENTRE_TOO_FAR,self.image_height), color_ip=COLOR_ORANGE)
+                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint+DIST_FROM_CAMERA_CENTRE_TOO_FAR,0), (self.image_vertical_centre_xpoint+DIST_FROM_CAMERA_CENTRE_TOO_FAR,self.image_height), color_ip=COLOR_ORANGE)
                     
-
-
-                    # Calculate centre point of camera and draw the lines for reference
-                    print("Camera centre : ",self.image_vertical_centre_xpoint)
-                    self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint,0), (self.image_vertical_centre_xpoint,self.image_height), color_ip=COLOR_YELLOW)
-                    self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint-DIST_FROM_CAMERA_CENTRE_THRESHOLD,0), (self.image_vertical_centre_xpoint-DIST_FROM_CAMERA_CENTRE_THRESHOLD,self.image_height), color_ip=COLOR_YELLOW)
-                    self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint+DIST_FROM_CAMERA_CENTRE_THRESHOLD,0), (self.image_vertical_centre_xpoint+DIST_FROM_CAMERA_CENTRE_THRESHOLD,self.image_height), color_ip=COLOR_YELLOW)
-                    self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint-DIST_FROM_CAMERA_CENTRE_TOO_FAR,0), (self.image_vertical_centre_xpoint-DIST_FROM_CAMERA_CENTRE_TOO_FAR,self.image_height), color_ip=COLOR_ORANGE)
-                    self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint+DIST_FROM_CAMERA_CENTRE_TOO_FAR,0), (self.image_vertical_centre_xpoint+DIST_FROM_CAMERA_CENTRE_TOO_FAR,self.image_height), color_ip=COLOR_ORANGE)
-                
-                    # Calculate centre point of the detected person
-                    print("Person centre : ",self.BB_MIDDLE_BOTTOM_LINE[POINT_X])
-                    self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.BB_MIDDLE_BOTTOM_LINE[POINT_X],0), (self.BB_MIDDLE_BOTTOM_LINE[POINT_X],self.image_height), color_ip=COLOR_GREEN)
+                        # Calculate centre point of the detected person
+                        print("Person centre : ",self.BB_MIDDLE_BOTTOM_LINE[POINT_X])
+                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.BB_MIDDLE_BOTTOM_LINE[POINT_X],0), (self.BB_MIDDLE_BOTTOM_LINE[POINT_X],self.image_height), color_ip=COLOR_GREEN)
 
 
         else:
@@ -371,6 +399,7 @@ class FollowMe_Go1():
                 
                 else:
                     print("Not near the centre")
+                    self.camera_raw_op = addOpenCVTextAtCentre(self.camera_raw_op, "MOVE CLOSER TO CENTRE", color_ip=COLOR_RED)
         
         else:
             print("Person not detected...")
@@ -621,6 +650,23 @@ def addOpenCVText(image,text_ip,position = (200, 200), fontScale_ip = DEFAULT_TE
     new_imagewithText = cv2.putText(    img = image,
                                         text = text_ip,
                                         org = position,
+                                        fontFace = cv2.FONT_HERSHEY_SIMPLEX,
+                                        fontScale = fontScale_ip,
+                                        color = color_ip,
+                                        thickness = 2
+                                    )
+    return new_imagewithText
+
+def addOpenCVTextAtCentre(image,text_ip,fontScale_ip = DEFAULT_TEXT_SIZE, color_ip = DEFAULT_TEXT_COLOR ):
+
+    textsize = len(text_ip)
+
+    y = int(ZED_IMAGE_HEIGHT/2)
+    x = int(ZED_IMAGE_WIDTH/2) - int(textsize/2) * DEFAULT_TEXT_PIXEL
+
+    new_imagewithText = cv2.putText(    img = image,
+                                        text = text_ip,
+                                        org = (x,y),
                                         fontFace = cv2.FONT_HERSHEY_SIMPLEX,
                                         fontScale = fontScale_ip,
                                         color = color_ip,
