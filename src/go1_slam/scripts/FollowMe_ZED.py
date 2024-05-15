@@ -36,6 +36,11 @@ LNR_VEL_FOLLOWME_OK_MAX = 0.4
 LNR_VEL_FOLLOWME_OK_MIN = 0.2
 LNR_VEL_FOLLOWME_GO_BACK = -0.2
 
+ZERO_CMD_VEL = {'linear': {'x': 0.0, 'y': 0.0, 'z': 0.0}, 'angular': {'x': 0.0, 'y': 0.0, 'z': 0.0}}
+
+
+## Follow me
+FOLLOWME_SEARCHING_STATE_THRESHOLD = 5
 
 #ZED
 ZED_IMAGE_HEIGHT = 376
@@ -200,8 +205,10 @@ class FollowMe_Go1():
         self.camera_depth_map = ''
 
         self.state = 'INIT'
+        self.prev_movement = 'NONE'
         self.person_detected = False
         self.person_tracked_id = TRACKING_ID_INI
+        self.searching_state_cntr = 0
 
         self.centre_deviation_flag = CENTRE_MAINTAINED
         self.centre_deviation_cntr = 0
@@ -512,6 +519,7 @@ class FollowMe_Go1():
                         ## Only turn right
                         followme_cmd_vel.angular.z = POS_SIGN * ANG_VEL_FOLLOWME_PERSON_AT_CAMERA_BOUNDARY
                         self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'right', color_ip=COLOR_ORANGE )
+                        self.prev_movement = 'RIGHT'
                 
                     # If less, move left
                     if(centre_deviation < 0):
@@ -519,6 +527,7 @@ class FollowMe_Go1():
                         ## Only turn left
                         followme_cmd_vel.angular.z = NEG_SIGN * ANG_VEL_FOLLOWME_PERSON_AT_CAMERA_BOUNDARY 
                         self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left', color_ip=COLOR_ORANGE )
+                        self.prev_movement = 'LEFT'
 
                 else:
                     # If difference is greater than threshold, move right
@@ -526,12 +535,14 @@ class FollowMe_Go1():
                         print("Person moved to my Right")
                         followme_cmd_vel.angular.z = ANG_VEL_FOLLOWME_POS
                         self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'right' )
+                        self.prev_movement = 'RIGHT'
                 
                     # If less, move left
                     if(centre_deviation < 0):
                         print("Person moved to my Left")
                         followme_cmd_vel.angular.z = ANG_VEL_FOLLOWME_NEG
                         self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left' )
+                        self.prev_movement = 'LEFT'
 
 
                 ## Resetting of aligning to centre
@@ -543,6 +554,7 @@ class FollowMe_Go1():
             else:
                 print("Centre Maintained")
                 followme_cmd_vel.angular.z = 0.0
+                self.prev_movement = 'NO_TURN'
 
                 if(self.centre_deviation_cntr >= CENTRE_ERR_DEBOUNCE_THRESHOLD):
                     self.centre_deviation_flag = CENTRE_CORRECTING
@@ -550,9 +562,72 @@ class FollowMe_Go1():
                     self.centre_deviation_flag = CENTRE_MAINTAINED
 
 
-        #else:
-        # Reset as no person seen
-        # Not explicitly resetting as its already zero as init value
+        else:
+            # Reset as no person seen
+            # Not explicitly resetting as its already zero as init value
+
+            self.state = 'SEARCHING'
+
+        ## Publish cmd vel
+
+        print(self.followme_cmdvel_pub)
+        self.camera_raw_op = addOpenCVText(self.camera_raw_op, "Linear x  : " + str(followme_cmd_vel.linear.x)  , POS_IMAGE_BOTTOM_RIGHT_TEXT_1, color_ip=COLOR_GREEN)
+        self.camera_raw_op = addOpenCVText(self.camera_raw_op, "Angular z : " + str(followme_cmd_vel.angular.z)  , POS_IMAGE_BOTTOM_RIGHT_TEXT_2, color_ip=COLOR_GREEN)
+  
+
+        self.followme_cmdvel_pub.publish(followme_cmd_vel)            
+
+
+
+    def searching(self):
+
+        ## Declare the cmd_vel variable
+        followme_cmd_vel = Twist()
+        # Initialize all velocities to zero
+        followme_cmd_vel.linear.x = 0.0
+        followme_cmd_vel.linear.y = 0.0
+        followme_cmd_vel.linear.z = 0.0
+        followme_cmd_vel.angular.x = 0.0
+        followme_cmd_vel.angular.y = 0.0
+        followme_cmd_vel.angular.z = 0.0
+
+        if(self.searching_state_cntr < FOLLOWME_SEARCHING_STATE_THRESHOLD):
+
+            if(self.person_detected == True):
+                self.searching_state_cntr = 0
+                self.state = 'FOLLOWING'
+                print("Person detected during searching. Going to following state")
+                self.camera_raw_op = addOpenCVTextAtCentre(self.camera_raw_op, "DETECTED", color_ip=COLOR_RED)
+
+            else:
+
+                self.searching_state_cntr += 1
+
+                ## Look for previous state
+                if(self.prev_movement == 'RIGHT'):
+                    followme_cmd_vel.angular.z = POS_SIGN * ANG_VEL_FOLLOWME_PERSON_AT_CAMERA_BOUNDARY
+                    self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'right', color_ip=COLOR_ORANGE )
+                    self.prev_movement = 'RIGHT'
+                
+                elif(self.prev_movement == 'LEFT'):
+                    followme_cmd_vel.angular.z = NEG_SIGN * ANG_VEL_FOLLOWME_PERSON_AT_CAMERA_BOUNDARY 
+                    self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left', color_ip=COLOR_ORANGE )
+                    self.prev_movement = 'LEFT'
+
+                else:
+                    print("Not moving in Searching state as there was no possible movement")
+                    followme_cmd_vel.angular.z = 0.0
+                    self.prev_movement = 'NO_TURN'
+
+
+            self.state = 'FOLLOWING'
+            
+        else:
+            self.state = 'INIT'
+            self.searching_state_cntr = 0
+            print("Timed out! Going back to init state as no person detected during searching.")
+
+
 
         ## Publish cmd vel
 
@@ -578,6 +653,9 @@ class FollowMe_Go1():
 
             elif self.state == 'FOLLOWING':
                 self.following()
+
+            elif self.state == 'SEARCHING':
+                self.searching()
 
 
             
