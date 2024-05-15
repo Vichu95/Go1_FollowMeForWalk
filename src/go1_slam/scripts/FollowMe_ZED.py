@@ -37,7 +37,7 @@ ZERO_CMD_VEL = {'linear': {'x': 0.0, 'y': 0.0, 'z': 0.0}, 'angular': {'x': 0.0, 
 
 
 ## Follow me
-FOLLOWME_SEARCHING_STATE_THRESHOLD = 5
+FOLLOWME_SEARCHING_STATE_THRESHOLD = 7
 
 #ZED
 ZED_IMAGE_HEIGHT = 376
@@ -576,7 +576,7 @@ class FollowMe_Go1():
         self.camera_raw_op = addOpenCVText(self.camera_raw_op, "Angular z : " + str(followme_cmd_vel.angular.z)  , POS_IMAGE_BOTTOM_RIGHT_TEXT_2, color_ip=COLOR_GREEN)
   
 
-        #self.followme_cmdvel_pub.publish(followme_cmd_vel)            
+        self.followme_cmdvel_pub.publish(followme_cmd_vel)            
 
 
 
@@ -643,7 +643,7 @@ class FollowMe_Go1():
         self.camera_raw_op = addOpenCVText(self.camera_raw_op, "Angular z : " + str(followme_cmd_vel.angular.z)  , POS_IMAGE_BOTTOM_RIGHT_TEXT_2, color_ip=COLOR_GREEN)
   
 
-        #self.followme_cmdvel_pub.publish(followme_cmd_vel)       
+        self.followme_cmdvel_pub.publish(followme_cmd_vel)       
 
 
     def followme_run(self):
