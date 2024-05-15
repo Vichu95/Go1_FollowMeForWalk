@@ -25,8 +25,9 @@ import requests
 ## Go1
 POS_SIGN = 1
 NEG_SIGN = -1
-ANG_VEL_FOLLOWME_PERSON_JUSTAWAY_FROM_CENTRE = 0.9
-ANG_VEL_FOLLOWME_PERSON_AT_CAMERA_BOUNDARY = 1.2
+ANG_VEL_FOLLOWME_PERSON_JUSTAWAY_FROM_CENTRE = 0.5
+ANG_VEL_FOLLOWME_PERSON_AT_CAMERA_BOUNDARY = 0.9
+ANG_VEL_FOLLOWME_PERSON_SEARCHING = 0.5
 LNR_VEL_FOLLOWME_PERSON_VERY_FAR = 1.1
 LNR_VEL_FOLLOWME_TOO_CLOSE = 0.3
 LNR_VEL_FOLLOWME_OK_MAX = 1.0
@@ -45,7 +46,7 @@ ZED_IMAGE_WIDTH = 672
 
 ## Object detection
 OBJECT_DETECTION_ACCURACY_THRESHOLD = 40
-OBJECT_DETECTION_ACCURACY_THRESHOLD_REASSIGN = 70
+OBJECT_DETECTION_ACCURACY_THRESHOLD_REASSIGN = 55
 DIST_PERSON_CAMERA_TOBEKEPT = 80
 DIST_PERSON_CAMERA_DIFF_THRESHOLD = 10
 DIST_PERSON_CAMERA_TOO_CLOSE = 40
@@ -137,10 +138,10 @@ class FollowMe_Go1():
         init_ZED_params.camera_resolution = sl.RESOLUTION.VGA
         init_ZED_params.camera_fps = 30
         
-        init_ZED_params.depth_mode = sl.DEPTH_MODE.NEURAL # Use ULTRA depth mode
+        init_ZED_params.depth_mode = sl.DEPTH_MODE.ULTRA # or use NEURAL depth mode
         init_ZED_params.coordinate_units = sl.UNIT.CENTIMETER # Use millimeter units (for depth measurements)
-        init_ZED_params.depth_minimum_distance = 20 
-        init_ZED_params.depth_maximum_distance = 300 
+        init_ZED_params.depth_minimum_distance = 25 
+        init_ZED_params.depth_maximum_distance = 700 #7m
         init_ZED_params.depth_stabilization = 30 
 
         # Open the camera
@@ -292,6 +293,12 @@ class FollowMe_Go1():
                             print("The person cannot be tracked as many objects (PEOPLE) being detected!")
                             self.camera_raw_op = addOpenCVTextAtCentre(self.camera_raw_op, "TOO MANY DETECTIONS", color_ip=COLOR_RED)
 
+                        ## At this point, there is either 1 or more persons detected with less or more confidence
+                        ## If the state is in searching, we should wait here
+                        if(self.state == 'SEARCHING'):
+                            self.state = 'WAITING'
+                            print("Stop moving for searching. Wait at this point")
+
 
                     ### Proceed with detected person
                     if(self.person_detected == True):
@@ -322,7 +329,12 @@ class FollowMe_Go1():
                         if object_being_tracked.mask.is_init():
                             
                             # Calcualte the depth value
-                            self.person_depth, depth_map_masked  = self.process_depth(object_being_tracked.mask.get_data())
+                            temp_depth, depth_map_masked  = self.process_depth(object_being_tracked.mask.get_data())
+
+                            ## Check if the depth is valid value
+                            if(np.isfinite(temp_depth)):
+                                self.person_depth = temp_depth
+
 
                         ## Draw depth line and mention depth
                         depthText = str(self.person_depth) + "cm"
@@ -368,8 +380,9 @@ class FollowMe_Go1():
                            self.obj_bb2d[POINT_TOP_LEFT][POINT_X]: self.obj_bb2d[POINT_BOTTOM_RIGHT][POINT_X] ] = mask_data
 
 
-        ## Replace infinite values
+        ## Replace infinite values and nan
         self.camera_depth_map[np.isinf(self.camera_depth_map)] = 0
+        self.camera_depth_map[np.isnan(self.camera_depth_map)] = 0
 
         # Find the indices where the array has 255s. Mask contains 255 where the object is present, rest 0
         indices_255 = np.where(depth_map_complete == 255)
@@ -604,28 +617,37 @@ class FollowMe_Go1():
             if(self.person_detected == True):
                 self.searching_state_cntr = 0
                 self.state = 'FOLLOWING'
+                self.prev_movement = 'NO_TURN'
                 print("Person detected during searching. Going to following state")
                 self.camera_raw_op = addOpenCVTextAtCentre(self.camera_raw_op, "DETECTED", color_ip=COLOR_RED)
 
             else:
 
-                ## Look for previous state
-                if(self.prev_movement == 'RIGHT'):
-                    print("Searching for the person in the right")
-                    followme_cmd_vel.angular.z = POS_SIGN * ANG_VEL_FOLLOWME_PERSON_AT_CAMERA_BOUNDARY
-                    self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'right', color_ip=COLOR_ORANGE )
-                    self.prev_movement = 'RIGHT'
-                
-                elif(self.prev_movement == 'LEFT'):
-                    print("Searching for the person in the left")
-                    followme_cmd_vel.angular.z = NEG_SIGN * ANG_VEL_FOLLOWME_PERSON_AT_CAMERA_BOUNDARY 
-                    self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left', color_ip=COLOR_ORANGE )
-                    self.prev_movement = 'LEFT'
-
-                else:
-                    print("Not moving in Searching state as there was no possible movement")
+                if(self.state == 'WAITING'):
+                    #No movement needed
+                    print("Searching for the person in that position. No movement")
                     followme_cmd_vel.angular.z = 0.0
                     self.prev_movement = 'NO_TURN'
+
+                else:
+
+                    ## Look for previous state
+                    if(self.prev_movement == 'RIGHT'):
+                        print("Searching for the person in the right")
+                        followme_cmd_vel.angular.z = POS_SIGN * ANG_VEL_FOLLOWME_PERSON_SEARCHING
+                        self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'right', color_ip=COLOR_ORANGE )
+                        self.prev_movement = 'RIGHT'
+                    
+                    elif(self.prev_movement == 'LEFT'):
+                        print("Searching for the person in the left")
+                        followme_cmd_vel.angular.z = NEG_SIGN * ANG_VEL_FOLLOWME_PERSON_SEARCHING 
+                        self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left', color_ip=COLOR_ORANGE )
+                        self.prev_movement = 'LEFT'
+
+                    else:
+                        print("Not moving in Searching state as there was no possible movement")
+                        followme_cmd_vel.angular.z = 0.0
+                        self.prev_movement = 'NO_TURN'
 
             
         else:
@@ -661,7 +683,7 @@ class FollowMe_Go1():
             elif self.state == 'FOLLOWING':
                 self.following()
 
-            if self.state == 'SEARCHING':
+            elif self.state == 'SEARCHING' or self.state == 'WAITING':
                 self.searching()
 
 
