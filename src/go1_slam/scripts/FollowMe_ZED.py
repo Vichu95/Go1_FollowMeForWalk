@@ -14,6 +14,7 @@ from geometry_msgs.msg import Twist
 import cv2
 import numpy as np
 import requests
+from time import sleep
 
 
 
@@ -32,13 +33,13 @@ LNR_VEL_FOLLOWME_PERSON_VERY_FAR = 1.1
 LNR_VEL_FOLLOWME_TOO_CLOSE = 0.3
 LNR_VEL_FOLLOWME_OK_MAX = 1.0
 LNR_VEL_FOLLOWME_OK_MIN = 0.3
-LNR_VEL_FOLLOWME_GO_BACK = -0.2
+LNR_VEL_FOLLOWME_GO_BACK = -0.15
 
 ZERO_CMD_VEL = {'linear': {'x': 0.0, 'y': 0.0, 'z': 0.0}, 'angular': {'x': 0.0, 'y': 0.0, 'z': 0.0}}
 
 
 ## Follow me
-FOLLOWME_SEARCHING_STATE_THRESHOLD = 7
+FOLLOWME_SEARCHING_STATE_THRESHOLD = 12 # 250ms wait time for a count 
 
 #ZED
 ZED_IMAGE_HEIGHT = 376
@@ -48,8 +49,8 @@ ZED_IMAGE_WIDTH = 672
 OBJECT_DETECTION_ACCURACY_THRESHOLD = 40
 OBJECT_DETECTION_ACCURACY_THRESHOLD_REASSIGN = 55
 DIST_PERSON_CAMERA_TOBEKEPT = 80
-DIST_PERSON_CAMERA_DIFF_THRESHOLD = 10
-DIST_PERSON_CAMERA_TOO_CLOSE = 40
+DIST_PERSON_CAMERA_DIFF_THRESHOLD = 8
+DIST_PERSON_CAMERA_TOO_CLOSE = 30
 DIST_PERSON_CAMERA_VERY_FAR = 250
 DIST_FROM_CAMERA_CENTRE_THRESHOLD = (int(ZED_IMAGE_WIDTH * 0.125))
 DIST_FROM_CAMERA_CENTRE_TOO_FAR = (int(ZED_IMAGE_WIDTH * 0.34))
@@ -665,7 +666,10 @@ class FollowMe_Go1():
         self.camera_raw_op = addOpenCVText(self.camera_raw_op, "Angular z : " + str(followme_cmd_vel.angular.z)  , POS_IMAGE_BOTTOM_RIGHT_TEXT_2, color_ip=COLOR_GREEN)
   
 
-        self.followme_cmdvel_pub.publish(followme_cmd_vel)       
+        self.followme_cmdvel_pub.publish(followme_cmd_vel) 
+
+        ## Wait for 250ms
+        sleep(0.25)      
 
 
     def followme_run(self):
