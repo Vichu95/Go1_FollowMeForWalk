@@ -25,10 +25,7 @@ import requests
 ## Go1
 POS_SIGN = 1
 NEG_SIGN = -1
-MIN_VEL_FOLLOWME_POS = 0.25
-MIN_VEL_FOLLOWME_NEG = -0.25
-ANG_VEL_FOLLOWME_POS = 0.9
-ANG_VEL_FOLLOWME_NEG = -0.9
+ANG_VEL_FOLLOWME_PERSON_JUSTAWAY_FROM_CENTRE = 0.9
 ANG_VEL_FOLLOWME_PERSON_AT_CAMERA_BOUNDARY = 1.0
 LNR_VEL_FOLLOWME_PERSON_VERY_FAR = 0.5
 LNR_VEL_FOLLOWME_TOO_CLOSE = 0.3
@@ -54,7 +51,7 @@ DIST_PERSON_CAMERA_DIFF_THRESHOLD = 10
 DIST_PERSON_CAMERA_TOO_CLOSE = 40
 DIST_PERSON_CAMERA_VERY_FAR = 250
 DIST_FROM_CAMERA_CENTRE_THRESHOLD = (int(ZED_IMAGE_WIDTH * 0.125))
-DIST_FROM_CAMERA_CENTRE_TOO_FAR = (int(ZED_IMAGE_WIDTH * 0.375))
+DIST_FROM_CAMERA_CENTRE_TOO_FAR = (int(ZED_IMAGE_WIDTH * 0.34))
 DIST_FROM_CAMERA_CENTRE_NEAR = (int(ZED_IMAGE_WIDTH * 0.0625))
 
 POINT_X= 0
@@ -67,7 +64,7 @@ POINT_BOTTOM_LEFT = 3
 CENTRE_MAINTAINED = 0
 CENTRE_ERR_DEBOUNCING = 1
 CENTRE_CORRECTING = 2
-CENTRE_ERR_DEBOUNCE_THRESHOLD = 3
+CENTRE_ERR_DEBOUNCE_THRESHOLD = 2
 
 TRACKING_ID_INI = 999
 
@@ -97,12 +94,7 @@ POS_IMAGE_BOTTOM_RIGHT_ARROW = [500,250]
 
 
 ## LAB Testing values
-POS_SIGN = 1
-NEG_SIGN = -1
-MIN_VEL_FOLLOWME_POS = 0.111
-MIN_VEL_FOLLOWME_NEG = -0.111
-ANG_VEL_FOLLOWME_POS = 0.3
-ANG_VEL_FOLLOWME_NEG = -0.3
+ANG_VEL_FOLLOWME_PERSON_JUSTAWAY_FROM_CENTRE = 0.3
 ANG_VEL_FOLLOWME_PERSON_AT_CAMERA_BOUNDARY = 0.7
 LNR_VEL_FOLLOWME_PERSON_VERY_FAR = 0.3
 LNR_VEL_FOLLOWME_TOO_CLOSE = 0.15
@@ -110,14 +102,10 @@ LNR_VEL_FOLLOWME_OK_MAX = 0.2
 LNR_VEL_FOLLOWME_OK_MIN = 0.15
 LNR_VEL_FOLLOWME_GO_BACK = -0.111
 ## Object detection
-OBJECT_DETECTION_ACCURACY_THRESHOLD = 40
 DIST_PERSON_CAMERA_TOBEKEPT = 80
 DIST_PERSON_CAMERA_DIFF_THRESHOLD = 10
 DIST_PERSON_CAMERA_TOO_CLOSE = 40
 DIST_PERSON_CAMERA_VERY_FAR = 150
-DIST_FROM_CAMERA_CENTRE_THRESHOLD = (int(ZED_IMAGE_WIDTH * 0.125))
-DIST_FROM_CAMERA_CENTRE_TOO_FAR = (int(ZED_IMAGE_WIDTH * 0.375))
-DIST_FROM_CAMERA_CENTRE_NEAR = (int(ZED_IMAGE_WIDTH * 0.0625))
 
 ################################################################
 ##############    C L A S S E S
@@ -260,10 +248,7 @@ class FollowMe_Go1():
 
                 objects_detected_array = objects_detected.object_list
                 print("\n\n\nObject(s) detected = " + str(len(objects_detected_array)))
-
-
-
-              
+         
 
                 if len(objects_detected_array) > 0 :
                     
@@ -280,13 +265,21 @@ class FollowMe_Go1():
                         print(" Label '"+repr(object_detected.label)+"' (conf. "+str(int(object_detected.confidence))+"/100)")
                         print(" Tracking ID: "+str(int(object_detected.id))+" tracking state: "+repr(object_detected.tracking_state)+" / "+repr(object_detected.action_state))
                        
+
+                        temp_obj_bb2d = object_being_tracked.bounding_box_2d
+                        temp_obj_bb2d = temp_obj_bb2d.astype(int)
+                        ## Define points for easier access in drawing images
+                        self.BB_CORNER_TOP_RIGHT_TEXT = (temp_obj_bb2d[POINT_TOP_RIGHT][POINT_X], temp_obj_bb2d[POINT_TOP_RIGHT][POINT_Y] + DEFAULT_TEXT_PIXEL)
+                        idText = repr(object_detected.label) + " ID: "+ str(int(object_detected.id)) + " " + str(int(object_detected.confidence)) + "%"
+                        self.camera_raw_op = addOpenCVText(self.camera_raw_op, idText ,self.BB_CORNER_TOP_RIGHT_TEXT)
+
                         if(self.person_tracked_id == int(object_detected.id)):
                             self.person_detected = True
                             object_being_tracked = object_detected
 
                     ## If not present, assign a new id only if there is only one object being detected and confidence is good
                     if(self.person_detected != True):
-                        if len(objects_detected_array) == 0 :
+                        if (len(objects_detected_array) == 1) :
                             object_being_tracked = objects_detected_array[0]
                             if(int(object_being_tracked.confidence) > OBJECT_DETECTION_ACCURACY_THRESHOLD_REASSIGN):
                                 self.person_tracked_id  = int(object_being_tracked.id)
@@ -355,6 +348,9 @@ class FollowMe_Go1():
                         print("Person centre : ",self.BB_MIDDLE_BOTTOM_LINE[POINT_X])
                         self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.BB_MIDDLE_BOTTOM_LINE[POINT_X],0), (self.BB_MIDDLE_BOTTOM_LINE[POINT_X],self.image_height), color_ip=COLOR_GREEN)
 
+                else:
+                    ## No objects detected
+                    self.camera_raw_op = addOpenCVTextAtCentre(self.camera_raw_op, "NO PERSON DETECTED", color_ip=COLOR_RED)
 
         else:
             print("\nZED Grab function failed.\n")
@@ -389,6 +385,11 @@ class FollowMe_Go1():
     def starting(self):
 
         print("Initializing the follow me ")
+
+        ##Init the coutners and necessary state
+        self.searching_state_cntr = 0
+        self.centre_deviation_flag = CENTRE_MAINTAINED
+        self.centre_deviation_cntr = 0
 
         # Check if human is detected
         if(self.person_detected):
@@ -533,14 +534,14 @@ class FollowMe_Go1():
                     # If difference is greater than threshold, move right
                     if(centre_deviation > 0):
                         print("Person moved to my Right")
-                        followme_cmd_vel.angular.z = ANG_VEL_FOLLOWME_POS
+                        followme_cmd_vel.angular.z = POS_SIGN * ANG_VEL_FOLLOWME_PERSON_JUSTAWAY_FROM_CENTRE
                         self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'right' )
                         self.prev_movement = 'RIGHT'
                 
                     # If less, move left
                     if(centre_deviation < 0):
                         print("Person moved to my Left")
-                        followme_cmd_vel.angular.z = ANG_VEL_FOLLOWME_NEG
+                        followme_cmd_vel.angular.z = NEG_SIGN * ANG_VEL_FOLLOWME_PERSON_JUSTAWAY_FROM_CENTRE
                         self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left' )
                         self.prev_movement = 'LEFT'
 
@@ -565,7 +566,7 @@ class FollowMe_Go1():
         else:
             # Reset as no person seen
             # Not explicitly resetting as its already zero as init value
-
+            print("Switching to searching state")
             self.state = 'SEARCHING'
 
         ## Publish cmd vel
@@ -575,11 +576,12 @@ class FollowMe_Go1():
         self.camera_raw_op = addOpenCVText(self.camera_raw_op, "Angular z : " + str(followme_cmd_vel.angular.z)  , POS_IMAGE_BOTTOM_RIGHT_TEXT_2, color_ip=COLOR_GREEN)
   
 
-        self.followme_cmdvel_pub.publish(followme_cmd_vel)            
+        #self.followme_cmdvel_pub.publish(followme_cmd_vel)            
 
 
 
     def searching(self):
+        print("Searching for the person ")
 
         ## Declare the cmd_vel variable
         followme_cmd_vel = Twist()
@@ -591,7 +593,13 @@ class FollowMe_Go1():
         followme_cmd_vel.angular.y = 0.0
         followme_cmd_vel.angular.z = 0.0
 
-        if(self.searching_state_cntr < FOLLOWME_SEARCHING_STATE_THRESHOLD):
+
+        print("Searching state counter ", self.searching_state_cntr)
+
+
+
+        self.searching_state_cntr += 1
+        if(self.searching_state_cntr <= FOLLOWME_SEARCHING_STATE_THRESHOLD):
 
             if(self.person_detected == True):
                 self.searching_state_cntr = 0
@@ -601,15 +609,15 @@ class FollowMe_Go1():
 
             else:
 
-                self.searching_state_cntr += 1
-
                 ## Look for previous state
                 if(self.prev_movement == 'RIGHT'):
+                    print("Searching for the person in the right")
                     followme_cmd_vel.angular.z = POS_SIGN * ANG_VEL_FOLLOWME_PERSON_AT_CAMERA_BOUNDARY
                     self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'right', color_ip=COLOR_ORANGE )
                     self.prev_movement = 'RIGHT'
                 
                 elif(self.prev_movement == 'LEFT'):
+                    print("Searching for the person in the left")
                     followme_cmd_vel.angular.z = NEG_SIGN * ANG_VEL_FOLLOWME_PERSON_AT_CAMERA_BOUNDARY 
                     self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left', color_ip=COLOR_ORANGE )
                     self.prev_movement = 'LEFT'
@@ -619,13 +627,12 @@ class FollowMe_Go1():
                     followme_cmd_vel.angular.z = 0.0
                     self.prev_movement = 'NO_TURN'
 
-
-            self.state = 'FOLLOWING'
             
         else:
             self.state = 'INIT'
             self.searching_state_cntr = 0
             print("Timed out! Going back to init state as no person detected during searching.")
+
 
 
 
@@ -636,7 +643,7 @@ class FollowMe_Go1():
         self.camera_raw_op = addOpenCVText(self.camera_raw_op, "Angular z : " + str(followme_cmd_vel.angular.z)  , POS_IMAGE_BOTTOM_RIGHT_TEXT_2, color_ip=COLOR_GREEN)
   
 
-        self.followme_cmdvel_pub.publish(followme_cmd_vel)       
+        #self.followme_cmdvel_pub.publish(followme_cmd_vel)       
 
 
     def followme_run(self):
@@ -654,7 +661,7 @@ class FollowMe_Go1():
             elif self.state == 'FOLLOWING':
                 self.following()
 
-            elif self.state == 'SEARCHING':
+            if self.state == 'SEARCHING':
                 self.searching()
 
 
@@ -740,7 +747,7 @@ def addOpenCVTextAtCentre(image,text_ip,fontScale_ip = DEFAULT_TEXT_SIZE, color_
     textsize = len(text_ip)
 
     y = int(ZED_IMAGE_HEIGHT/2)
-    x = int(ZED_IMAGE_WIDTH/2) - int(textsize/2) * DEFAULT_TEXT_PIXEL
+    x = int(ZED_IMAGE_WIDTH/2) - int(textsize/2) * (DEFAULT_TEXT_PIXEL - 5)
 
     new_imagewithText = cv2.putText(    img = image,
                                         text = text_ip,
