@@ -326,6 +326,19 @@ class FollowMe_Go1():
                         idText = repr(object_being_tracked.label) + " ID: "+ str(int(object_being_tracked.id)) + " " + str(int(object_being_tracked.confidence)) + "%"
                         self.camera_raw_op = addOpenCVText(self.camera_raw_op, idText ,self.BB_CORNER_TOP_RIGHT_TEXT)
 
+                        # Calculate centre point of camera and draw the lines for reference
+                        print("Camera centre : ",self.image_vertical_centre_xpoint)
+                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint,0), (self.image_vertical_centre_xpoint,self.image_height), color_ip=COLOR_YELLOW)
+                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint-DIST_FROM_CAMERA_CENTRE_THRESHOLD,0), (self.image_vertical_centre_xpoint-DIST_FROM_CAMERA_CENTRE_THRESHOLD,self.image_height), color_ip=COLOR_YELLOW)
+                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint+DIST_FROM_CAMERA_CENTRE_THRESHOLD,0), (self.image_vertical_centre_xpoint+DIST_FROM_CAMERA_CENTRE_THRESHOLD,self.image_height), color_ip=COLOR_YELLOW)
+                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint-DIST_FROM_CAMERA_CENTRE_TOO_FAR,0), (self.image_vertical_centre_xpoint-DIST_FROM_CAMERA_CENTRE_TOO_FAR,self.image_height), color_ip=COLOR_ORANGE)
+                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint+DIST_FROM_CAMERA_CENTRE_TOO_FAR,0), (self.image_vertical_centre_xpoint+DIST_FROM_CAMERA_CENTRE_TOO_FAR,self.image_height), color_ip=COLOR_ORANGE)
+                    
+                        # Calculate centre point of the detected person
+                        print("Person centre : ",self.BB_MIDDLE_BOTTOM_LINE[POINT_X])
+                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.BB_MIDDLE_BOTTOM_LINE[POINT_X],0), (self.BB_MIDDLE_BOTTOM_LINE[POINT_X],self.image_height), color_ip=COLOR_GREEN)
+
+
                         # Make sure the mask is available for detected person
                         if object_being_tracked.mask.is_init():
                             
@@ -347,19 +360,6 @@ class FollowMe_Go1():
                                         color_ip=COLOR_RED
                                         )
                         
-
-
-                        # Calculate centre point of camera and draw the lines for reference
-                        print("Camera centre : ",self.image_vertical_centre_xpoint)
-                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint,0), (self.image_vertical_centre_xpoint,self.image_height), color_ip=COLOR_YELLOW)
-                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint-DIST_FROM_CAMERA_CENTRE_THRESHOLD,0), (self.image_vertical_centre_xpoint-DIST_FROM_CAMERA_CENTRE_THRESHOLD,self.image_height), color_ip=COLOR_YELLOW)
-                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint+DIST_FROM_CAMERA_CENTRE_THRESHOLD,0), (self.image_vertical_centre_xpoint+DIST_FROM_CAMERA_CENTRE_THRESHOLD,self.image_height), color_ip=COLOR_YELLOW)
-                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint-DIST_FROM_CAMERA_CENTRE_TOO_FAR,0), (self.image_vertical_centre_xpoint-DIST_FROM_CAMERA_CENTRE_TOO_FAR,self.image_height), color_ip=COLOR_ORANGE)
-                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint+DIST_FROM_CAMERA_CENTRE_TOO_FAR,0), (self.image_vertical_centre_xpoint+DIST_FROM_CAMERA_CENTRE_TOO_FAR,self.image_height), color_ip=COLOR_ORANGE)
-                    
-                        # Calculate centre point of the detected person
-                        print("Person centre : ",self.BB_MIDDLE_BOTTOM_LINE[POINT_X])
-                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.BB_MIDDLE_BOTTOM_LINE[POINT_X],0), (self.BB_MIDDLE_BOTTOM_LINE[POINT_X],self.image_height), color_ip=COLOR_GREEN)
 
                 else:
                     ## No objects detected
