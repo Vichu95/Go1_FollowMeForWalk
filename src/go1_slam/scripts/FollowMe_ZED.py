@@ -39,7 +39,8 @@ ZERO_CMD_VEL = {'linear': {'x': 0.0, 'y': 0.0, 'z': 0.0}, 'angular': {'x': 0.0, 
 
 
 ## Follow me
-FOLLOWME_SEARCHING_STATE_THRESHOLD = 12 # 250ms wait time for a count 
+FOLLOWME_SEARCHING_STATE_THRESHOLD = 12 # 250ms wait time for a count
+AFTER_SEARCH_RELIABLE_DEPTH_THRESHOLD = 20 #cm
 
 #ZED
 ZED_IMAGE_HEIGHT = 376
@@ -195,10 +196,12 @@ class FollowMe_Go1():
         self.camera_depth_map = ''
 
         self.state = 'INIT'
-        self.prev_movement = 'NONE'
         self.person_detected = False
         self.person_tracked_id = TRACKING_ID_INI
         self.searching_state_cntr = 0
+        self.prev_movement = 'NONE'
+        self.prev_depth_val = DIST_PERSON_CAMERA_TOBEKEPT
+        self.prev_obj_bb2d = [[0 ,  0], [0  , 0] ,[0 ,0] ,[0 ,0]]
 
         self.centre_deviation_flag = CENTRE_MAINTAINED
         self.centre_deviation_cntr = 0
@@ -616,6 +619,32 @@ class FollowMe_Go1():
         if(self.searching_state_cntr <= FOLLOWME_SEARCHING_STATE_THRESHOLD):
 
             if(self.person_detected == True):
+
+                ## Verify the reliability of new detection
+                ##    - Is depth in similar range?
+                ##    - Is bounding box around similar area
+
+                flag_reliability_check = True
+                # Depth check
+                if(abs(self.person_depth - self.prev_depth_val) > AFTER_SEARCH_RELIABLE_DEPTH_THRESHOLD):
+                    flag_reliability_check = False
+                # # BB check
+                # if()
+
+
+
+
+                #         # Draw box
+                #         self.camera_raw_op = cv2.rectangle(self.camera_raw_op,
+                #                                         [self.obj_bb2d[POINT_TOP_LEFT][POINT_X] , self.obj_bb2d[POINT_TOP_LEFT][POINT_Y] ],
+                #                                         [self.obj_bb2d[POINT_BOTTOM_RIGHT][POINT_X] , self.obj_bb2d[POINT_BOTTOM_RIGHT][POINT_Y] ],
+                #                                         COLOR_BLUE, 
+                #                                         OBJ_BB_THICKNESS                                                       
+                #                                         )
+                        
+
+
+
                 self.searching_state_cntr = 0
                 self.state = 'FOLLOWING'
                 self.prev_movement = 'NO_TURN'
@@ -672,6 +701,12 @@ class FollowMe_Go1():
         sleep(0.25)      
 
 
+    def store_prev_data(self):
+        # Storing previous data. Used to verify the reliability of new detection and as a safeguard mechanism
+        self.prev_depth_val = self.person_depth
+        self.prev_obj_bb2d = self.obj_bb2d
+        # self.prev_movement is also updated, but at each cmd_vel update
+
     def followme_run(self):
 
         print("Executing run")
@@ -690,6 +725,9 @@ class FollowMe_Go1():
             elif self.state == 'SEARCHING' or self.state == 'WAITING':
                 self.searching()
 
+
+            # To store prev data
+            self.store_prev_data()
 
             
             cv2.imshow("Camera", self.camera_raw_op) #Display image
