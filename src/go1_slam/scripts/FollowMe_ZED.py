@@ -277,7 +277,7 @@ class FollowMe_Go1():
                         print(" Tracking ID: "+str(int(object_detected.id))+" tracking state: "+repr(object_detected.tracking_state)+" / "+repr(object_detected.action_state))
                        
 
-                        temp_obj_bb2d = object_being_tracked.bounding_box_2d
+                        temp_obj_bb2d = object_detected.bounding_box_2d
                         temp_obj_bb2d = temp_obj_bb2d.astype(int)
                         ## Define points for easier access in drawing images
                         self.BB_CORNER_TOP_RIGHT_TEXT = (temp_obj_bb2d[POINT_TOP_RIGHT][POINT_X], temp_obj_bb2d[POINT_TOP_RIGHT][POINT_Y] + DEFAULT_TEXT_PIXEL)
@@ -288,7 +288,7 @@ class FollowMe_Go1():
 
                             ## SEARCHING tracking state of ZED isnt reliable. Faced unwanted behaviours few times
                             ## So in case the tracked person state is going to be SEARCHING, we dont detect it
-                            if(object_detected.tracking_state == 'OK'):
+                            if(repr(object_detected.tracking_state) == 'OK'):
                                 self.person_detected = True
                                 object_being_tracked = object_detected
                             else:
@@ -299,7 +299,7 @@ class FollowMe_Go1():
                         if (len(objects_detected_array) == 1) :
                             object_being_tracked = objects_detected_array[0]
                             if(int(object_being_tracked.confidence) > OBJECT_DETECTION_ACCURACY_THRESHOLD_REASSIGN):
-                                if(object_being_tracked.tracking_state == 'OK'):
+                                if(repr(object_being_tracked.tracking_state) == 'OK'):
                                     self.person_tracked_id  = int(object_being_tracked.id)
                                     self.person_detected = True
                                 else:
@@ -307,16 +307,23 @@ class FollowMe_Go1():
                             else:
                                 print("The person cannot be tracked as confidence of detection is less!")
                                 self.camera_raw_op = addOpenCVTextAtCentre(self.camera_raw_op, "DETECTION CONFIDENCE IS LESS", color_ip=COLOR_RED)
+
+
+                                ## At this point, there is either 1 or more persons detected with less or more confidence
+                                ## If the state is in searching, we should wait here
+                                if(self.state == 'SEARCHING'):
+                                    self.state = 'WAITING'
+                                    print("Stop moving for searching. Wait at this point")
   
                         else:
                             print("The person cannot be tracked as many objects (PEOPLE) being detected!")
                             self.camera_raw_op = addOpenCVTextAtCentre(self.camera_raw_op, "TOO MANY DETECTIONS", color_ip=COLOR_RED)
 
-                        ## At this point, there is either 1 or more persons detected with less or more confidence
-                        ## If the state is in searching, we should wait here
-                        if(self.state == 'SEARCHING'):
-                            self.state = 'WAITING'
-                            print("Stop moving for searching. Wait at this point")
+                            ## At this point, there is either 1 or more persons detected with less or more confidence
+                            ## If the state is in searching, we should wait here
+                            if(self.state == 'SEARCHING'):
+                                self.state = 'WAITING'
+                                print("Stop moving for searching. Wait at this point")
 
 
                     ### Proceed with detected person
