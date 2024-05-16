@@ -14,7 +14,7 @@ prev_followme_state = ''
 prev_followme_state_change_count = 0
 prev_followme_state_detected_once = False
 
-STATE_STABLE_DEBOUNCE = 2
+STATE_STABLE_DEBOUNCE = 4 # 250ms wait. so 2s
 
 
 
@@ -33,6 +33,7 @@ def followme_state_callback(data):
         # If same as previous state, increment the counter
         prev_followme_state_change_count += 1
         ## Wait for 250ms to make a proper delay
+        sleep(0.25)     
 
         # If the state has persisted for more than STATE_STABLE_DEBOUNCE counts
         if prev_followme_state_change_count >= STATE_STABLE_DEBOUNCE and prev_followme_state_detected_once == False:
@@ -44,14 +45,14 @@ def followme_state_callback(data):
 
             if(stable_state == 'INIT'):
                 print("Announcing INIT 2")
-                audio_cmd = "aplay -D plughw:2,0 ../audio/INIT_state_de_female.wav"
-                # os.system(audio_cmd)
+                audio_cmd = "aplay -D plughw:2,0 ~/Documents/go1catkin_ws/src/pkgbase_12032024/go1_followme/audio/INIT_state_de_female.wav"
+                os.system(audio_cmd)
                 print("Finished annoucing INIT")
             
             elif(stable_state == 'FOLLOWING'):
                 print("Announcing FOLLOWING 2")
-                audio_cmd = "aplay -D plughw:2,0 ../audio/FOLLOWING_state_de_female.wav"
-                # os.system(audio_cmd)
+                audio_cmd = "aplay -D plughw:2,0 ~/Documents/go1catkin_ws/src/pkgbase_12032024/go1_followme/audio/FOLLOWING_state_de_female.wav"
+                os.system(audio_cmd)
                 print("Finished annoucing FOLLOWING")
             
 
@@ -59,10 +60,12 @@ def followme_state_callback(data):
 if __name__ == '__main__':
 
     print("Follow me client is starting...")
+    
 
     rospy.init_node('followme_client_node', anonymous=True)    
     rospy.Subscriber('/followme_state', followme_state, followme_state_callback , queue_size=10)
-
+    
 
 
     rospy.spin()
+
