@@ -23,6 +23,12 @@ from time import sleep
 ##############    M A C R O S
 ################################################################
 
+
+#ZED
+ZED_IMAGE_HEIGHT = 376
+ZED_IMAGE_WIDTH = 672
+
+
 ## Go1
 POS_SIGN = 1
 NEG_SIGN = -1
@@ -34,6 +40,7 @@ LNR_VEL_FOLLOWME_TOO_CLOSE = 0.3
 LNR_VEL_FOLLOWME_OK_MAX = 1.0
 LNR_VEL_FOLLOWME_OK_MIN = 0.3
 LNR_VEL_FOLLOWME_GO_BACK = -0.15
+LNR_VEL_FOLLOWME_POS_STEP = 0.025
 
 ZERO_CMD_VEL = {'linear': {'x': 0.0, 'y': 0.0, 'z': 0.0}, 'angular': {'x': 0.0, 'y': 0.0, 'z': 0.0}}
 
@@ -41,10 +48,9 @@ ZERO_CMD_VEL = {'linear': {'x': 0.0, 'y': 0.0, 'z': 0.0}, 'angular': {'x': 0.0, 
 ## Follow me
 FOLLOWME_SEARCHING_STATE_THRESHOLD = 12 # 250ms wait time for a count
 AFTER_SEARCH_RELIABLE_DEPTH_THRESHOLD = 20 #cm
+AFTER_SEARCH_RELIABLE_RIGHTENTRY_THRESHOLD = (int(ZED_IMAGE_WIDTH * 0.7)) # 30% is the threshold
+AFTER_SEARCH_RELIABLE_LEFTENTRY_THRESHOLD = (int(ZED_IMAGE_WIDTH * 0.3)) 
 
-#ZED
-ZED_IMAGE_HEIGHT = 376
-ZED_IMAGE_WIDTH = 672
 
 ## Object detection
 OBJECT_DETECTION_ACCURACY_THRESHOLD = 40
@@ -201,7 +207,7 @@ class FollowMe_Go1():
         self.searching_state_cntr = 0
         self.prev_movement = 'NONE'
         self.prev_depth_val = DIST_PERSON_CAMERA_TOBEKEPT
-        self.prev_obj_bb2d = [[0 ,  0], [0  , 0] ,[0 ,0] ,[0 ,0]]
+        self.prev_cmd_vel_linear_x = 0.0
 
         self.centre_deviation_flag = CENTRE_MAINTAINED
         self.centre_deviation_cntr = 0
@@ -496,7 +502,7 @@ class FollowMe_Go1():
                         speed_slope = (LNR_VEL_FOLLOWME_OK_MAX - LNR_VEL_FOLLOWME_OK_MIN)/(DIST_PERSON_CAMERA_VERY_FAR - DIST_PERSON_CAMERA_TOBEKEPT)
                         followme_cmd_vel.linear.x = depth_diff * speed_slope + LNR_VEL_FOLLOWME_OK_MIN
 
-                        print("Slope = " + str(speed_slope) + " linear speed calcualted " + str(followme_cmd_vel.linear.x))
+                        print("Slope = " + str(speed_slope) + " Linear x speed = " + str(followme_cmd_vel.linear.x))
 
                         self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'up' )
             
@@ -516,6 +522,18 @@ class FollowMe_Go1():
                         print("Moving backward")
                         followme_cmd_vel.linear.x = LNR_VEL_FOLLOWME_GO_BACK
                         self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'down' )
+
+
+                ## Ramping up of cmd_vel to avoid sudden high values above min value
+                if(followme_cmd_vel.linear.x > (LNR_VEL_FOLLOWME_OK_MIN + LNR_VEL_FOLLOWME_POS_STEP)):
+                    if(followme_cmd_vel.linear.x - self.prev_cmd_vel_linear_x > LNR_VEL_FOLLOWME_POS_STEP ):
+                        # Increment with step size
+                        followme_cmd_vel.linear.x = self.prev_cmd_vel_linear_x + LNR_VEL_FOLLOWME_POS_STEP
+                        print("Ramping up the linear x by ", LNR_VEL_FOLLOWME_POS_STEP, " and is now ", followme_cmd_vel.linear.x )
+                        
+                
+
+
 
             else:
                 print("Depth Maintained")
@@ -588,7 +606,7 @@ class FollowMe_Go1():
 
         ## Publish cmd vel
 
-        print(self.followme_cmdvel_pub)
+        self.prev_cmd_vel_linear_x =  followme_cmd_vel.linear.x
         self.camera_raw_op = addOpenCVText(self.camera_raw_op, "Linear x  : " + str(followme_cmd_vel.linear.x)  , POS_IMAGE_BOTTOM_RIGHT_TEXT_1, color_ip=COLOR_GREEN)
         self.camera_raw_op = addOpenCVText(self.camera_raw_op, "Angular z : " + str(followme_cmd_vel.angular.z)  , POS_IMAGE_BOTTOM_RIGHT_TEXT_2, color_ip=COLOR_GREEN)
   
@@ -628,28 +646,32 @@ class FollowMe_Go1():
                 # Depth check
                 if(abs(self.person_depth - self.prev_depth_val) > AFTER_SEARCH_RELIABLE_DEPTH_THRESHOLD):
                     flag_reliability_check = False
-                # # BB check
-                # if()
+
+                # BB check
+                print("Value of BOTTOM RIGHT x, checking RIGHT entry is ",self.obj_bb2d[POINT_BOTTOM_RIGHT][POINT_X],AFTER_SEARCH_RELIABLE_RIGHTENTRY_THRESHOLD)
+                print("Value of top left x, checking left entry is ",self.obj_bb2d[POINT_TOP_LEFT][POINT_X],AFTER_SEARCH_RELIABLE_LEFTENTRY_THRESHOLD)
+
+                if(self.prev_movement == 'RIGHT' and (self.obj_bb2d[POINT_BOTTOM_RIGHT][POINT_X] < AFTER_SEARCH_RELIABLE_RIGHTENTRY_THRESHOLD) ):
+                    flag_reliability_check = False
+                        
+                elif(self.prev_movement == 'LEFT' and (self.obj_bb2d[POINT_TOP_LEFT][POINT_X] > AFTER_SEARCH_RELIABLE_LEFTENTRY_THRESHOLD) ):
+                    flag_reliability_check = False
 
 
-
-
-                #         # Draw box
-                #         self.camera_raw_op = cv2.rectangle(self.camera_raw_op,
-                #                                         [self.obj_bb2d[POINT_TOP_LEFT][POINT_X] , self.obj_bb2d[POINT_TOP_LEFT][POINT_Y] ],
-                #                                         [self.obj_bb2d[POINT_BOTTOM_RIGHT][POINT_X] , self.obj_bb2d[POINT_BOTTOM_RIGHT][POINT_Y] ],
-                #                                         COLOR_BLUE, 
-                #                                         OBJ_BB_THICKNESS                                                       
-                #                                         )
                         
 
+                if(flag_reliability_check):
+                    self.searching_state_cntr = 0
+                    self.state = 'FOLLOWING'
+                    self.prev_movement = 'NO_TURN'
+                    print("Person detected during searching. Going to following state")
+                    self.camera_raw_op = addOpenCVTextAtCentre(self.camera_raw_op, "DETECTED", color_ip=COLOR_RED)
+                else:
+                    self.state = 'INIT'
+                    self.searching_state_cntr = 0
+                    print("Not reliable detection. Switching to INIT.")
+                    self.camera_raw_op = addOpenCVTextAtCentre(self.camera_raw_op, "DETECTED BUT NOT RELIABLE", color_ip=COLOR_RED)
 
-
-                self.searching_state_cntr = 0
-                self.state = 'FOLLOWING'
-                self.prev_movement = 'NO_TURN'
-                print("Person detected during searching. Going to following state")
-                self.camera_raw_op = addOpenCVTextAtCentre(self.camera_raw_op, "DETECTED", color_ip=COLOR_RED)
 
             else:
 
@@ -690,7 +712,7 @@ class FollowMe_Go1():
 
         ## Publish cmd vel
 
-        print(self.followme_cmdvel_pub)
+        self.prev_cmd_vel_linear_x =  followme_cmd_vel.linear.x
         self.camera_raw_op = addOpenCVText(self.camera_raw_op, "Linear x  : " + str(followme_cmd_vel.linear.x)  , POS_IMAGE_BOTTOM_RIGHT_TEXT_1, color_ip=COLOR_GREEN)
         self.camera_raw_op = addOpenCVText(self.camera_raw_op, "Angular z : " + str(followme_cmd_vel.angular.z)  , POS_IMAGE_BOTTOM_RIGHT_TEXT_2, color_ip=COLOR_GREEN)
   
@@ -704,7 +726,6 @@ class FollowMe_Go1():
     def store_prev_data(self):
         # Storing previous data. Used to verify the reliability of new detection and as a safeguard mechanism
         self.prev_depth_val = self.person_depth
-        self.prev_obj_bb2d = self.obj_bb2d
         # self.prev_movement is also updated, but at each cmd_vel update
 
     def followme_run(self):
