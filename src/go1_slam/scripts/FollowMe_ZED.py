@@ -53,8 +53,8 @@ AFTER_SEARCH_RELIABLE_LEFTENTRY_THRESHOLD = (int(ZED_IMAGE_WIDTH * 0.3))
 
 
 ## Object detection
-OBJECT_DETECTION_ACCURACY_THRESHOLD = 40
-OBJECT_DETECTION_ACCURACY_THRESHOLD_REASSIGN = 55
+OBJECT_DETECTION_ACCURACY_THRESHOLD = 55
+OBJECT_DETECTION_ACCURACY_THRESHOLD_REASSIGN = 60
 DIST_PERSON_CAMERA_TOBEKEPT = 80
 DIST_PERSON_CAMERA_DIFF_THRESHOLD = 8
 DIST_PERSON_CAMERA_TOO_CLOSE = 30
@@ -308,6 +308,7 @@ class FollowMe_Go1():
                                     self.camera_raw_op = addOpenCVTextAtCentre(self.camera_raw_op, "DETECTION CONFIDENCE IS LESS", color_ip=COLOR_RED)
                             else:
                                 print("New detected person is not in proper ZED Tracking state.")
+                                self.camera_raw_op = addOpenCVTextAtCentre(self.camera_raw_op, "IMPROPER TRACKING STATE", color_ip=COLOR_RED)
   
                         else:
                             print("The person cannot be tracked as many objects (PEOPLE) being detected!")
