@@ -531,34 +531,34 @@ class FollowMe_Go1():
                 #####
                 if(abs(centre_deviation) > DIST_FROM_CAMERA_CENTRE_TOO_FAR):
 
-                    # If difference is greater than 0, move right
-                    if(centre_deviation > 0):
+                    # If difference is less than 0, move right
+                    if(centre_deviation < 0):
                         print("Person moved too much to my Right")
                         ## Only turn right
-                        followme_cmd_vel.angular.z = POS_SIGN * ANG_VEL_FOLLOWME_PERSON_AT_CAMERA_BOUNDARY
+                        followme_cmd_vel.angular.z = NEG_SIGN * ANG_VEL_FOLLOWME_PERSON_AT_CAMERA_BOUNDARY
                         self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'right', color_ip=COLOR_ORANGE )
                         self.prev_movement = 'RIGHT'
                 
-                    # If less, move left
-                    if(centre_deviation < 0):
+                    # If more, move left
+                    if(centre_deviation > 0):
                         print("Person moved too much to my Left")
                         ## Only turn left
-                        followme_cmd_vel.angular.z = NEG_SIGN * ANG_VEL_FOLLOWME_PERSON_AT_CAMERA_BOUNDARY 
+                        followme_cmd_vel.angular.z = POS_SIGN * ANG_VEL_FOLLOWME_PERSON_AT_CAMERA_BOUNDARY 
                         self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left', color_ip=COLOR_ORANGE )
                         self.prev_movement = 'LEFT'
 
                 else:
-                    # If difference is greater than threshold, move right
-                    if(centre_deviation > 0):
+                    # If difference is less than threshold, move right
+                    if(centre_deviation < 0):
                         print("Person moved to my Right")
-                        followme_cmd_vel.angular.z = POS_SIGN * ANG_VEL_FOLLOWME_PERSON_JUSTAWAY_FROM_CENTRE
+                        followme_cmd_vel.angular.z = NEG_SIGN * ANG_VEL_FOLLOWME_PERSON_JUSTAWAY_FROM_CENTRE
                         self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'right' )
                         self.prev_movement = 'RIGHT'
                 
-                    # If less, move left
-                    if(centre_deviation < 0):
+                    # If more, move left
+                    if(centre_deviation > 0):
                         print("Person moved to my Left")
-                        followme_cmd_vel.angular.z = NEG_SIGN * ANG_VEL_FOLLOWME_PERSON_JUSTAWAY_FROM_CENTRE
+                        followme_cmd_vel.angular.z = POS_SIGN * ANG_VEL_FOLLOWME_PERSON_JUSTAWAY_FROM_CENTRE
                         self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left' )
                         self.prev_movement = 'LEFT'
 
@@ -664,13 +664,13 @@ class FollowMe_Go1():
                     ## Look for previous state
                     if(self.prev_movement == 'RIGHT'):
                         print("Searching for the person in the right")
-                        followme_cmd_vel.angular.z = POS_SIGN * ANG_VEL_FOLLOWME_PERSON_SEARCHING
+                        followme_cmd_vel.angular.z = NEG_SIGN * ANG_VEL_FOLLOWME_PERSON_SEARCHING
                         self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'right', color_ip=COLOR_ORANGE )
                         self.prev_movement = 'RIGHT'
                     
                     elif(self.prev_movement == 'LEFT'):
                         print("Searching for the person in the left")
-                        followme_cmd_vel.angular.z = NEG_SIGN * ANG_VEL_FOLLOWME_PERSON_SEARCHING 
+                        followme_cmd_vel.angular.z = POS_SIGN * ANG_VEL_FOLLOWME_PERSON_SEARCHING 
                         self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left', color_ip=COLOR_ORANGE )
                         self.prev_movement = 'LEFT'
 
@@ -842,10 +842,10 @@ def addOpenCVArrow(image, start_pos = [0, 0], direction = 'up', color_ip = DEFAU
     elif(direction == 'down'):
         end_pos = [start_pos[POINT_X], start_pos[POINT_Y] + ARROW_LENGTH]
 
-    elif(direction == 'right'):
+    elif(direction == 'left'):
         end_pos = [start_pos[POINT_X]- ARROW_LENGTH, start_pos[POINT_Y]]
 
-    elif(direction == 'left'):
+    elif(direction == 'right'):
         end_pos = [start_pos[POINT_X]+ ARROW_LENGTH, start_pos[POINT_Y]]
 
 
