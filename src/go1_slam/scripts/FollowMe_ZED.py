@@ -46,7 +46,7 @@ ZERO_CMD_VEL = {'linear': {'x': 0.0, 'y': 0.0, 'z': 0.0}, 'angular': {'x': 0.0, 
 
 
 ## Follow me
-FOLLOWME_SEARCHING_STATE_THRESHOLD = 12 # 250ms wait time for a count
+FOLLOWME_SEARCHING_STATE_THRESHOLD = 12 # 250ms wait time for each iteration. So for 3s, give 3*4 = 12, for 4s,give 16
 AFTER_SEARCH_RELIABLE_DEPTH_THRESHOLD = 20 #cm
 AFTER_SEARCH_RELIABLE_RIGHTENTRY_THRESHOLD = (int(ZED_IMAGE_WIDTH * 0.7)) # 30% is the threshold
 AFTER_SEARCH_RELIABLE_LEFTENTRY_THRESHOLD = (int(ZED_IMAGE_WIDTH * 0.3)) 
@@ -285,16 +285,25 @@ class FollowMe_Go1():
                         self.camera_raw_op = addOpenCVText(self.camera_raw_op, idText ,self.BB_CORNER_TOP_RIGHT_TEXT)
 
                         if(self.person_tracked_id == int(object_detected.id)):
-                            self.person_detected = True
-                            object_being_tracked = object_detected
+
+                            ## SEARCHING tracking state of ZED isnt reliable. Faced unwanted behaviours few times
+                            ## So in case the tracked person state is going to be SEARCHING, we dont detect it
+                            if(object_detected.tracking_state == 'OK'):
+                                self.person_detected = True
+                                object_being_tracked = object_detected
+                            else:
+                                print("Tracked person is not in proper ZED Tracking state.")
 
                     ## If not present, assign a new id only if there is only one object being detected and confidence is good
                     if(self.person_detected != True):
                         if (len(objects_detected_array) == 1) :
                             object_being_tracked = objects_detected_array[0]
                             if(int(object_being_tracked.confidence) > OBJECT_DETECTION_ACCURACY_THRESHOLD_REASSIGN):
-                                self.person_tracked_id  = int(object_being_tracked.id)
-                                self.person_detected = True
+                                if(object_being_tracked.tracking_state == 'OK'):
+                                    self.person_tracked_id  = int(object_being_tracked.id)
+                                    self.person_detected = True
+                                else:
+                                    print("New detected person is not in proper ZED Tracking state.")
                             else:
                                 print("The person cannot be tracked as confidence of detection is less!")
                                 self.camera_raw_op = addOpenCVTextAtCentre(self.camera_raw_op, "DETECTION CONFIDENCE IS LESS", color_ip=COLOR_RED)
@@ -505,6 +514,17 @@ class FollowMe_Go1():
                         print("Slope = " + str(speed_slope) + " Linear x speed = " + str(followme_cmd_vel.linear.x))
 
                         self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'up' )
+
+
+                    ## Ramping up of cmd_vel to avoid sudden high values above min value
+                    if(followme_cmd_vel.linear.x - self.prev_cmd_vel_linear_x > LNR_VEL_FOLLOWME_POS_STEP ):
+                        # Increment with step size
+                        followme_cmd_vel.linear.x = self.prev_cmd_vel_linear_x + LNR_VEL_FOLLOWME_POS_STEP                        
+                        print("Ramping up the linear x by ", LNR_VEL_FOLLOWME_POS_STEP, " and is now ", followme_cmd_vel.linear.x )
+                        if(followme_cmd_vel.linear.x < LNR_VEL_FOLLOWME_OK_MIN):
+                            followme_cmd_vel.linear.x = LNR_VEL_FOLLOWME_OK_MIN
+                            print("Keeping the linear x at minimum configured velocity")
+                            
             
                 # If less, move backward
                 if(depth_diff < 0):
@@ -522,17 +542,6 @@ class FollowMe_Go1():
                         print("Moving backward")
                         followme_cmd_vel.linear.x = LNR_VEL_FOLLOWME_GO_BACK
                         self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'down' )
-
-
-                ## Ramping up of cmd_vel to avoid sudden high values above min value
-                if(followme_cmd_vel.linear.x > (LNR_VEL_FOLLOWME_OK_MIN + LNR_VEL_FOLLOWME_POS_STEP)):
-                    if(followme_cmd_vel.linear.x - self.prev_cmd_vel_linear_x > LNR_VEL_FOLLOWME_POS_STEP ):
-                        # Increment with step size
-                        followme_cmd_vel.linear.x = self.prev_cmd_vel_linear_x + LNR_VEL_FOLLOWME_POS_STEP
-                        print("Ramping up the linear x by ", LNR_VEL_FOLLOWME_POS_STEP, " and is now ", followme_cmd_vel.linear.x )
-                        
-                
-
 
 
             else:
@@ -648,8 +657,8 @@ class FollowMe_Go1():
                     flag_reliability_check = False
 
                 # BB check
-                print("Value of BOTTOM RIGHT x, checking RIGHT entry is ",self.obj_bb2d[POINT_BOTTOM_RIGHT][POINT_X],AFTER_SEARCH_RELIABLE_RIGHTENTRY_THRESHOLD)
-                print("Value of top left x, checking left entry is ",self.obj_bb2d[POINT_TOP_LEFT][POINT_X],AFTER_SEARCH_RELIABLE_LEFTENTRY_THRESHOLD)
+                print("Value of bottom right x, right entry threshold ",self.obj_bb2d[POINT_BOTTOM_RIGHT][POINT_X],AFTER_SEARCH_RELIABLE_RIGHTENTRY_THRESHOLD)
+                print("Value of top left x, left entry threshold ",self.obj_bb2d[POINT_TOP_LEFT][POINT_X],AFTER_SEARCH_RELIABLE_LEFTENTRY_THRESHOLD)
 
                 if(self.prev_movement == 'RIGHT' and (self.obj_bb2d[POINT_BOTTOM_RIGHT][POINT_X] < AFTER_SEARCH_RELIABLE_RIGHTENTRY_THRESHOLD) ):
                     flag_reliability_check = False
