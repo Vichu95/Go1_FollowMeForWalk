@@ -32,7 +32,7 @@ ZED_IMAGE_WIDTH = 672
 ## Go1
 POS_SIGN = 1
 NEG_SIGN = -1
-ANG_VEL_FOLLOWME_PERSON_JUSTAWAY_FROM_CENTRE = 0.5
+ANG_VEL_FOLLOWME_PERSON_JUSTAWAY_FROM_CENTRE = 0.7
 ANG_VEL_FOLLOWME_PERSON_AT_CAMERA_BOUNDARY = 0.9
 ANG_VEL_FOLLOWME_PERSON_SEARCHING = 0.5
 LNR_VEL_FOLLOWME_PERSON_VERY_FAR = 1.1
@@ -47,7 +47,7 @@ ZERO_CMD_VEL = {'linear': {'x': 0.0, 'y': 0.0, 'z': 0.0}, 'angular': {'x': 0.0, 
 
 ## Follow me
 FOLLOWME_SEARCHING_STATE_THRESHOLD = 12 # 250ms wait time for each iteration. So for 3s, give 3*4 = 12, for 4s,give 16
-AFTER_SEARCH_RELIABLE_DEPTH_THRESHOLD = 20 #cm
+AFTER_SEARCH_RELIABLE_DEPTH_THRESHOLD = 70 #cm
 AFTER_SEARCH_RELIABLE_RIGHTENTRY_THRESHOLD = (int(ZED_IMAGE_WIDTH * 0.7)) # 30% is the threshold
 AFTER_SEARCH_RELIABLE_LEFTENTRY_THRESHOLD = (int(ZED_IMAGE_WIDTH * 0.3)) 
 
@@ -298,22 +298,16 @@ class FollowMe_Go1():
                     if(self.person_detected != True):
                         if (len(objects_detected_array) == 1) :
                             object_being_tracked = objects_detected_array[0]
-                            if(int(object_being_tracked.confidence) > OBJECT_DETECTION_ACCURACY_THRESHOLD_REASSIGN):
-                                if(repr(object_being_tracked.tracking_state) == 'OK'):
+
+                            if(repr(object_being_tracked.tracking_state) == 'OK'):
+                                if(int(object_being_tracked.confidence) > OBJECT_DETECTION_ACCURACY_THRESHOLD_REASSIGN):
                                     self.person_tracked_id  = int(object_being_tracked.id)
                                     self.person_detected = True
                                 else:
-                                    print("New detected person is not in proper ZED Tracking state.")
+                                    print("The person cannot be tracked as confidence of detection is less!")
+                                    self.camera_raw_op = addOpenCVTextAtCentre(self.camera_raw_op, "DETECTION CONFIDENCE IS LESS", color_ip=COLOR_RED)
                             else:
-                                print("The person cannot be tracked as confidence of detection is less!")
-                                self.camera_raw_op = addOpenCVTextAtCentre(self.camera_raw_op, "DETECTION CONFIDENCE IS LESS", color_ip=COLOR_RED)
-
-
-                                ## At this point, there is either 1 or more persons detected with less or more confidence
-                                ## If the state is in searching, we should wait here
-                                if(self.state == 'SEARCHING'):
-                                    self.state = 'WAITING'
-                                    print("Stop moving for searching. Wait at this point")
+                                print("New detected person is not in proper ZED Tracking state.")
   
                         else:
                             print("The person cannot be tracked as many objects (PEOPLE) being detected!")
@@ -601,6 +595,7 @@ class FollowMe_Go1():
                 if(abs(centre_deviation) < DIST_FROM_CAMERA_CENTRE_NEAR):
                     self.centre_deviation_flag = CENTRE_MAINTAINED
                     self.centre_deviation_cntr = 0
+                    self.prev_movement = 'NO_TURN'
                     print("Centre is maintained")
 
             else:
@@ -662,6 +657,7 @@ class FollowMe_Go1():
                 # Depth check
                 if(abs(self.person_depth - self.prev_depth_val) > AFTER_SEARCH_RELIABLE_DEPTH_THRESHOLD):
                     flag_reliability_check = False
+                    print("Depth reliability check failed")
 
                 # BB check
                 print("Value of bottom right x, right entry threshold ",self.obj_bb2d[POINT_BOTTOM_RIGHT][POINT_X],AFTER_SEARCH_RELIABLE_RIGHTENTRY_THRESHOLD)
@@ -683,9 +679,10 @@ class FollowMe_Go1():
                     print("Person detected during searching. Going to following state")
                     self.camera_raw_op = addOpenCVTextAtCentre(self.camera_raw_op, "DETECTED", color_ip=COLOR_RED)
                 else:
-                    self.state = 'INIT'
-                    self.searching_state_cntr = 0
-                    print("Not reliable detection. Switching to INIT.")
+                    #self.state = 'INIT'
+                    #self.searching_state_cntr = 0
+                    #print("Not reliable detection. Switching to INIT.")
+                    print("Not reliable detection.")
                     self.camera_raw_op = addOpenCVTextAtCentre(self.camera_raw_op, "DETECTED BUT NOT RELIABLE", color_ip=COLOR_RED)
 
 
