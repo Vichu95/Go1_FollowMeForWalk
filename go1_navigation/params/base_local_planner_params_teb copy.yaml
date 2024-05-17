@@ -27,10 +27,10 @@ TebLocalPlannerROS:
     
  # Robot
          
- max_vel_x: 0.5
- max_vel_x_backwards: 0.5
+ max_vel_x: 0.75
+ max_vel_x_backwards: 0.75
  max_vel_y: 0.35
- max_vel_theta: 0.11 # Default 0.5, prevent rotation
+ max_vel_theta: 1 # Default 0.5, prevent rotation
  acc_lim_x: 3.5
  acc_lim_y: 2
  acc_lim_theta: 3 #0.11 # Default 0.5, prevent rotation

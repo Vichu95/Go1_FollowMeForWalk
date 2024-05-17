@@ -140,26 +140,7 @@ bool Base::setControlCallback(go1_legged_msgs::SetControl::Request &req, go1_leg
 
 void Base::cmdVelCallback(geometry_msgs::Twist msg) {
     robot_high_cmd.velocity = {0.0};
-    robot_high_cmd.yawSpeed = 0.0;
-    
-    // // Vishnu : Limiting the velocity to minimum >0.11 for a movement
-    // if(msg.linear.x > 0 and msg.linear.x <= 0.11 )
-    // { msg.linear.x = 0.111; }
-    // if(msg.linear.x < 0 and msg.linear.x >= -0.11 )
-    // { msg.linear.x = -0.111; }
-
-    // if(msg.linear.y > 0 and msg.linear.y <= 0.11 )
-    // { msg.linear.y = 0.111; }
-    // if(msg.linear.y < 0 and msg.linear.y >= -0.11 )
-    // { msg.linear.y = -0.111; }
-
-    // if(msg.angular.z > 0 and msg.angular.z <= 0.11 )
-    // { msg.angular.z = 0.111; }
-    // if(msg.angular.z < 0 and msg.angular.z >= -0.11 )
-    // { msg.angular.z = -0.111; }
-
-
-
+    robot_high_cmd.yawSpeed = 0.0;     
   
     if (msg.linear.x && msg.linear.y && msg.angular.z) {
         robot_high_cmd.velocity[0] = msg.linear.x;
