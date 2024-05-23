@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 3.10)
 project(go1_base VERSION 0.5.0)
 add_compile_options(-std=c++17)
- if("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "x86_64.*")
-   set(SYSTEM_ARCHITECTURE amd64)
- endif()
- if("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "aarch64.*")
-   set(SYSTEM_ARCHITECTURE arm64)
- endif()
-#set(SYSTEM_ARCHITECTURE arm64)
+# if("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "x86_64.*")
+#   set(SYSTEM_ARCHITECTURE amd64)
+# endif()
+# if("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "aarch64.*")
+#   set(SYSTEM_ARCHITECTURE arm64)
+# endif()
+set(SYSTEM_ARCHITECTURE arm64)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy

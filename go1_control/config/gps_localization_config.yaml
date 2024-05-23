@@ -1,5 +1,5 @@
 #Configuation for robot GPS EKF
-frequency: 50
+frequency: 70
 two_d_mode: true
 publish_tf: true
 

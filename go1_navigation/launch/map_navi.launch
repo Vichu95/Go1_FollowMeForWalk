@@ -8,7 +8,7 @@
 	<!-- Lidar -->
 	<!-- <include file="$(find go1_navigation)/launch/include/ouster.launch.xml" /> -->
 	<!-- Run Pointcloud to laser scan if needed -->
-	<include file="$(find go1_navigation)/launch/include/point_cloud_to_laser_scan.launch" /> 
+	<include file="$(find go1_navigation)/launch/include/point_cloud_to_laser_scan.launch.xml" /> 
 	<!-- Run the map server -->
 	<include file="$(find go1_navigation)/launch/include/custom_map_server.launch.xml" />  
 	<!-- Run AMCL -->
