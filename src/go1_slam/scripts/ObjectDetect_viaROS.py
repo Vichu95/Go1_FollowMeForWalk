@@ -37,8 +37,9 @@ class image_converter:
     # (rows,cols,channels) = cv_image.shape
     # if cols > 60 and rows > 60 :
     # cv2.circle(image, (50,50), 10, 255)
-
-    #cv2.imshow("Image window", cv_image)
+	
+    #cv2.imshow("Image window", image)
+    #cv2.waitKey(1)
     results = self.model.track(image, show=True)
     # View results
     for r in results:

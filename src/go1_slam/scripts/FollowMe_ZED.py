@@ -17,6 +17,10 @@ import requests
 from time import sleep
 
 
+#Folow me
+from go1_followme.msg import followme_state
+
+
 
 
 ################################################################
@@ -130,6 +134,7 @@ class FollowMe_Go1():
         ######
         rospy.init_node('FollowMe_Go1', anonymous=False)
         self.followme_cmdvel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
+        self.followme_state_pub = rospy.Publisher('/followme_state', followme_state, queue_size=10)
 
 
         ######
@@ -763,6 +768,9 @@ class FollowMe_Go1():
 
             # To store prev data
             self.store_prev_data()
+
+
+            self.followme_state_pub.publish(self.state) 
 
             
             cv2.imshow("Camera", self.camera_raw_op) #Display image

@@ -1,44 +1,47 @@
-#!/usr/bin/env python
-from __future__ import print_function
-
-import sys
-import rospy
+#!/home/unitree/Documents/python38_venv/bin/python
 import cv2
-from std_msgs.msg import String
-from sensor_msgs.msg import Image
-import numpy as np
+from ultralytics import YOLO
 
-class image_converter:
+class camera:
+    def __init__(self, cam_id = None, width = 640, height = 480):
+        self.width = 640
+        self.cam_id = cam_id
+        self.width = width
+        self.height = height
 
-  def __init__(self):
+    def get_img(self):
+        IpLastSegment = "15"
+        cam = self.cam_id
+        udpstrPrevData = "udpsrc address=192.168.123."+ IpLastSegment + " port="
+        udpPORT = [9201,9202,9203,9204,9205]
+        udpstrBehindData = " ! application/x-rtp,media=video,encoding-name=H264 ! rtph264depay ! h264parse ! omxh264dec ! videoconvert ! appsink"
+        udpSendIntegratedPipe_0 = udpstrPrevData +  str(udpPORT[cam-1]) + udpstrBehindData
+        print(udpSendIntegratedPipe_0)
 
-    self.image_sub = rospy.Subscriber("/camera/front/image",Image,self.callback)
+        self.cap = cv2.VideoCapture(udpSendIntegratedPipe_0)
 
-  def callback(self,data):
+    def demo(self):
+        self.get_img() 
 
-    width = data.width
-    height = data.height
-    img_data = np.frombuffer(data.data, dtype=np.uint8)
-    image = img_data.reshape((height, width, 3))
-    # image_cv = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)  # Convert RGB to BGR if needed
+        while(True):
+            self.ret, self.frame = self.cap.read()
 
+            if self.frame is None:
+                print("NONE")
 
-    # (rows,cols,channels) = cv_image.shape
-    # if cols > 60 and rows > 60 :
-    cv2.circle(image, (50,50), 10, 255)
+            self.frame = cv2.resize(self.frame, (self.width, self.height))
+            if self.cam_id == 1:
+                self.frame = cv2.flip(self.frame, -1)
+            if self.frame is not None:
+                cv2.imshow("video0", self.frame)
+            if cv2.waitKey(2) & 0xFF == ord('q'):
+                break
+        self.cap.release()
+        cv2.destroyAllWindows()
 
-    # cv2.imshow("Image window", cv_image)
-    cv2.imshow("ROS Image", image)
-    cv2.waitKey(3)
+if __name__ == "__main__":
+    # Create an instance of the camera class
+    cam = camera(cam_id=1, width=640, height=480)  # Adjust parameters as needed
 
-def main(args):
-  ic = image_converter()
-  rospy.init_node('image_converter', anonymous=True)
-  try:
-    rospy.spin()
-  except KeyboardInterrupt:
-    print("Shutting down")
-  cv2.destroyAllWindows()
-
-if __name__ == '__main__':
-    main(sys.argv)
+    # Run the demo to display the video feed
+    cam.demo()
