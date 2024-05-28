@@ -45,7 +45,10 @@ OBJECT_DETECTION_ACCURACY_THRESHOLD = 55
 OBJECT_DETECTION_ACCURACY_THRESHOLD_REASSIGN = 60
 DIST_PERSON_CAMERA_TOBEKEPT = 60
 DIST_PERSON_CAMERA_DIFF_THRESHOLD = 20
+DIST_PERSON_CAMERA_VERY_FAR = 150
+DIST_FROM_CAMERA_CENTRE_TOO_FAR = (int(ZED_IMAGE_WIDTH * 0.34))
 DIST_FROM_CAMERA_CENTRE_THRESHOLD = (int(ZED_IMAGE_WIDTH * 0.0625))
+DIST_FROM_CAMERA_CENTRE_NEAR = (int(ZED_IMAGE_WIDTH * 0.03125))
 
 POINT_X= 0
 POINT_Y = 1
@@ -53,6 +56,12 @@ POINT_TOP_LEFT = 0
 POINT_TOP_RIGHT = 1
 POINT_BOTTOM_RIGHT = 2
 POINT_BOTTOM_LEFT = 3
+
+DIFF_MAINTAINED = 0
+DIFF_ERR_DEBOUNCING = 1
+DIFF_CORRECTING = 2
+CENTRE_ERR_DEBOUNCE_THRESHOLD = 4
+DEPTH_ERR_DEBOUNCE_THRESHOLD = 4
 
 TRACKING_ID_INI = 999
 
@@ -175,6 +184,11 @@ class FollowMe_Go1():
         self.state = 'INIT'
         self.person_detected = False
         self.person_tracked_id = TRACKING_ID_INI
+
+        self.centre_deviation_flag = DIFF_MAINTAINED
+        self.centre_deviation_cntr = 0
+        self.depth_diff_flag = DIFF_MAINTAINED
+        self.depth_diff_cntr = 0
         
 
 
@@ -379,6 +393,12 @@ class FollowMe_Go1():
 
         print("Initializing the follow me ")
 
+        ##Init the coutners and necessary state
+        self.centre_deviation_flag = DIFF_MAINTAINED
+        self.centre_deviation_cntr = 0
+        self.depth_diff_flag = DIFF_MAINTAINED
+        self.depth_diff_cntr = 0
+    
         # Check if human is detected
         if(self.person_detected):
                 
@@ -423,28 +443,45 @@ class FollowMe_Go1():
             print("Following the person ")
 
             # Calculate the depth difference from distance to be kept and current depth
-            depth_diff_flag = False
             depth_diff = self.person_depth - DIST_PERSON_CAMERA_TOBEKEPT
             
-            if(abs(depth_diff) > DIST_PERSON_CAMERA_DIFF_THRESHOLD):
-                depth_diff_flag = True
-            print("Depth Flag : ", depth_diff_flag, " Depth Difference : ", depth_diff)
+            if((abs(depth_diff) > DIST_PERSON_CAMERA_DIFF_THRESHOLD)
+               and self.depth_diff_flag != DIFF_CORRECTING):
+                self.depth_diff_flag = DIFF_ERR_DEBOUNCING
+                self.depth_diff_cntr += 1
+
+                ## If too far, no need of debouncing
+                if(abs(self.person_depth) > DIST_PERSON_CAMERA_VERY_FAR):
+                    self.depth_diff_flag = DIFF_CORRECTING
+                    self.depth_diff_cntr = DEPTH_ERR_DEBOUNCE_THRESHOLD
+            else:
+                self.depth_diff_cntr = 0
+
+            print("Depth Flag : ", self.depth_diff_flag, " Depth Difference : ", depth_diff, " Counter : ",self.depth_diff_cntr)
 
 
-            # Calculate the angle difference from distance to be kept and current distance from centre
-            centre_deviation_flag = False
+
+
             centre_deviation = self.image_vertical_centre_xpoint - self.BB_MIDDLE_BOTTOM_LINE[POINT_X]
-            if(abs(centre_deviation) > DIST_FROM_CAMERA_CENTRE_THRESHOLD ):
-                centre_deviation_flag = True
+            if((abs(centre_deviation) > DIST_FROM_CAMERA_CENTRE_THRESHOLD)
+               and self.centre_deviation_flag != DIFF_CORRECTING):
+                self.centre_deviation_flag = DIFF_ERR_DEBOUNCING
+                self.centre_deviation_cntr += 1
+
+                ## If too far, no need of debouncing
+                if(abs(centre_deviation) > DIST_FROM_CAMERA_CENTRE_TOO_FAR):
+                    self.centre_deviation_flag = DIFF_CORRECTING
+                    self.centre_deviation_cntr = CENTRE_ERR_DEBOUNCE_THRESHOLD
+            else:
+                self.centre_deviation_cntr = 0
+
+            print("Centre Deviation Flag : ", self.centre_deviation_flag, " Centre Deviation : ", centre_deviation, " Counter : ",self.centre_deviation_cntr)
 
 
 
-            print("Centre Deviation Flag : ", centre_deviation_flag, " Centre Deviation : ", centre_deviation)
 
 
-
-
-            if(depth_diff_flag):
+            if(self.depth_diff_flag == DIFF_CORRECTING):
                 # If difference is greater than threshold, move forward
                 if(depth_diff > 0):
                         
@@ -460,14 +497,27 @@ class FollowMe_Go1():
                     self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'down' )
 
 
+
+                ## Resetting of aligning to centre
+                if(abs(self.person_depth) <= DIST_PERSON_CAMERA_TOBEKEPT):
+                    self.depth_diff_flag = DIFF_MAINTAINED
+                    self.depth_diff_cntr = 0
+                    print("Depth is maintained")
+
+
             else:
                 print("Depth Maintained")
                 followme_cmd_vel.linear.y = 0.0
 
+                if(self.depth_diff_cntr >= DEPTH_ERR_DEBOUNCE_THRESHOLD):
+                    self.depth_diff_flag = DIFF_CORRECTING
+                elif(self.depth_diff_cntr == 0):
+                    self.depth_diff_flag = DIFF_MAINTAINED
+
 
 
             ## Only move left/right if the debounce threshold is reached
-            if(centre_deviation_flag):
+            if(self.centre_deviation_flag == DIFF_CORRECTING):
 
                 # If difference is less than threshold, move back
                 if(centre_deviation < 0):
@@ -482,9 +532,20 @@ class FollowMe_Go1():
                     self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left' )
 
 
+                ## Resetting of aligning to centre
+                if(abs(centre_deviation) < DIST_FROM_CAMERA_CENTRE_NEAR):
+                    self.centre_deviation_flag = DIFF_MAINTAINED
+                    self.centre_deviation_cntr = 0
+                    print("Centre is maintained")
+
             else:
                 print("Centre Maintained")
                 followme_cmd_vel.linear.x = 0.0
+
+                if(self.centre_deviation_cntr >= CENTRE_ERR_DEBOUNCE_THRESHOLD):
+                    self.centre_deviation_flag = DIFF_CORRECTING
+                elif(self.centre_deviation_cntr == 0):
+                    self.centre_deviation_flag = DIFF_MAINTAINED
 
 
         else:
