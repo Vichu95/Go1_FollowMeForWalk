@@ -32,7 +32,7 @@ from go1_followme.msg import followme_state
 #ZED
 ZED_IMAGE_HEIGHT = 376
 ZED_IMAGE_WIDTH = 672
-ZED_RATIO_DEPTH_PIXEL = 0.261 # Check calibrating function
+ZED_RATIO_DEPTH_PIXEL = 0.261 # Check calibrating function #todo
 
 ## Go1
 POS_SIGN = 1
@@ -44,6 +44,7 @@ NEG_SIGN = -1
 OBJECT_DETECTION_ACCURACY_THRESHOLD = 55
 OBJECT_DETECTION_ACCURACY_THRESHOLD_REASSIGN = 60
 DIST_PERSON_CAMERA_TOBEKEPT = 70
+DIST_PERSON_CAMERA_TOBEKEPT_PIXEL = 265 #Found out as an average value of pixel for 70cm depth by running the code [70,265] [60,280]
 DIST_PERSON_CAMERA_VALID_THRESHOLD = 5
 DIST_PERSON_CAMERA_DIFF_THRESHOLD = 10
 DIST_PERSON_CAMERA_VERY_FAR = 100
@@ -356,7 +357,7 @@ class FollowMe_Go1():
 
 
                         # Draw thresholds
-                        self.calibrating()
+                        # self.calibrating()
 
                         # Calculate centre point of camera and draw the lines for reference
                         print("Camera centre : ",self.image_vertical_centre_xpoint)
@@ -364,7 +365,7 @@ class FollowMe_Go1():
                         self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint-DIST_FROM_CAMERA_CENTRE_THRESHOLD,0), (self.image_vertical_centre_xpoint-DIST_FROM_CAMERA_CENTRE_THRESHOLD,self.image_height), color_ip=COLOR_YELLOW, alpha=TRANSPARENCY_ALPHA_GRAPHS)
                         self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint+DIST_FROM_CAMERA_CENTRE_THRESHOLD,0), (self.image_vertical_centre_xpoint+DIST_FROM_CAMERA_CENTRE_THRESHOLD,self.image_height), color_ip=COLOR_YELLOW, alpha=TRANSPARENCY_ALPHA_GRAPHS)
                      
-                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (0,int(DIST_PERSON_CAMERA_TOBEKEPT/self.depth_pixel_ratio_mean)), (self.image_width, int(DIST_PERSON_CAMERA_TOBEKEPT/self.depth_pixel_ratio_mean)), color_ip=COLOR_YELLOW, alpha=TRANSPARENCY_ALPHA_GRAPHS + 0.2)
+                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (0,DIST_PERSON_CAMERA_TOBEKEPT_PIXEL), (self.image_width, DIST_PERSON_CAMERA_TOBEKEPT_PIXEL), color_ip=COLOR_YELLOW, alpha=TRANSPARENCY_ALPHA_GRAPHS + 0.2)
                        
 
                         # Calculate centre point of the detected person
