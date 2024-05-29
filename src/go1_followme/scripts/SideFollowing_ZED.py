@@ -51,8 +51,9 @@ DIST_PERSON_CAMERA_VERY_FAR = 100
 DIST_FROM_CAMERA_CENTRE_TOO_FAR = (int(ZED_IMAGE_WIDTH * 0.34))
 DIST_FROM_CAMERA_CENTRE_THRESHOLD = (int(ZED_IMAGE_WIDTH * 0.0625))
 DIST_FROM_CAMERA_CENTRE_NEAR = (int(ZED_IMAGE_WIDTH * 0.03125))
-TURN_FROM_AXIS_THRESHOLD = math.radians(10)
-TURN_FROM_AXIS_VERY_FAR = math.radians(60)
+TURN_FROM_AXIS_THRESHOLD = math.radians(3)
+TURN_FROM_AXIS_VERY_FAR = math.radians(40)
+TURN_FROM_AXIS_NEAR = math.radians(0)
 
 POINT_X= 0
 POINT_Y = 1
@@ -66,7 +67,7 @@ DIFF_ERR_DEBOUNCING = 1
 DIFF_CORRECTING = 2
 CENTRE_ERR_DEBOUNCE_THRESHOLD = 4
 DEPTH_ERR_DEBOUNCE_THRESHOLD = 3
-TURN_ERR_DEBOUNCE_THRESHOLD = 3
+TURN_ERR_DEBOUNCE_THRESHOLD = 4
 
 TRACKING_ID_INI = 999
 
@@ -105,7 +106,7 @@ POS_IMAGE_BOTTOM_RIGHT_ARROW = [500,250]
 ## Object detection
 LNR_VEL_Y_MIN = 0.111
 LNR_VEL_X_MIN = 0.111
-ANG_VEL_Z_MIN = 0.111
+ANG_VEL_Z_MIN = 0.3
 
 ################################################################
 ##############    C L A S S E S
@@ -589,7 +590,8 @@ class FollowMe_Go1():
 
 
                 ## Resetting of aligning to centre
-                if(abs(turn_deviation) < TURN_FROM_AXIS_THRESHOLD):
+                if(abs(turn_deviation) < TURN_FROM_AXIS_NEAR or centre_deviation <= 0):
+                    followme_cmd_vel.angular.z = 0.0
                     self.turn_deviation_flag = DIFF_MAINTAINED
                     self.turn_deviation_cntr = 0
                     print("Turn is maintained")
@@ -605,10 +607,10 @@ class FollowMe_Go1():
 
             
 
+            ## Only move in y direction, when nothing else is going on
             if(self.depth_diff_flag == DIFF_CORRECTING):
-
                 
-                if(self.turn_deviation_flag != DIFF_CORRECTING):
+                if(self.turn_deviation_flag != DIFF_CORRECTING and self.centre_deviation_flag != DIFF_CORRECTING):
                     # If difference is greater than threshold, move forward
                     if(depth_diff > 0):
                             
