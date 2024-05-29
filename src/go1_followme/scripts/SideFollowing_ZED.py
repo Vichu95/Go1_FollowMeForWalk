@@ -43,14 +43,16 @@ NEG_SIGN = -1
 ## Object detection
 OBJECT_DETECTION_ACCURACY_THRESHOLD = 55
 OBJECT_DETECTION_ACCURACY_THRESHOLD_REASSIGN = 60
-DIST_PERSON_CAMERA_TOBEKEPT = 70
-DIST_PERSON_CAMERA_TOBEKEPT_PIXEL = 265 #Found out as an average value of pixel for 70cm depth by running the code [70,265] [60,280]
+DIST_PERSON_CAMERA_TOBEKEPT = 85
+DIST_PERSON_CAMERA_TOBEKEPT_PIXEL = 310 #Found out as an average value of pixel for 70cm depth by running the code [70,265] [60,280] [85,310]
 DIST_PERSON_CAMERA_VALID_THRESHOLD = 5
 DIST_PERSON_CAMERA_DIFF_THRESHOLD = 10
 DIST_PERSON_CAMERA_VERY_FAR = 100
 DIST_FROM_CAMERA_CENTRE_TOO_FAR = (int(ZED_IMAGE_WIDTH * 0.34))
 DIST_FROM_CAMERA_CENTRE_THRESHOLD = (int(ZED_IMAGE_WIDTH * 0.0625))
 DIST_FROM_CAMERA_CENTRE_NEAR = (int(ZED_IMAGE_WIDTH * 0.03125))
+TURN_FROM_AXIS_THRESHOLD = math.radians(10)
+TURN_FROM_AXIS_VERY_FAR = math.radians(60)
 
 POINT_X= 0
 POINT_Y = 1
@@ -64,6 +66,7 @@ DIFF_ERR_DEBOUNCING = 1
 DIFF_CORRECTING = 2
 CENTRE_ERR_DEBOUNCE_THRESHOLD = 4
 DEPTH_ERR_DEBOUNCE_THRESHOLD = 3
+TURN_ERR_DEBOUNCE_THRESHOLD = 3
 
 TRACKING_ID_INI = 999
 
@@ -102,6 +105,7 @@ POS_IMAGE_BOTTOM_RIGHT_ARROW = [500,250]
 ## Object detection
 LNR_VEL_Y_MIN = 0.111
 LNR_VEL_X_MIN = 0.111
+ANG_VEL_Z_MIN = 0.111
 
 ################################################################
 ##############    C L A S S E S
@@ -197,6 +201,8 @@ class FollowMe_Go1():
         self.centre_deviation_cntr = 0
         self.depth_diff_flag = DIFF_MAINTAINED
         self.depth_diff_cntr = 0
+        self.turn_deviation_flag = DIFF_MAINTAINED
+        self.turn_deviation_cntr = 0
         
         self.axis_origin = (int(self.image_width/2), DIST_PERSON_CAMERA_TOBEKEPT_PIXEL)
         
@@ -419,6 +425,8 @@ class FollowMe_Go1():
         self.centre_deviation_cntr = 0
         self.depth_diff_flag = DIFF_MAINTAINED
         self.depth_diff_cntr = 0
+        self.turn_deviation_flag = DIFF_MAINTAINED
+        self.turn_deviation_cntr = 0
     
         # Check if human is detected
         if(self.person_detected):
@@ -498,55 +506,37 @@ class FollowMe_Go1():
 
             print("Centre Deviation Flag : ", self.centre_deviation_flag, " Centre Deviation : ", centre_deviation, " Counter : ",self.centre_deviation_cntr)
 
+
+
             
-            ## Calculate angle of turn
-            # Angle made by line from person to centre of both thresholds
+            ## Calculate angle of turn : Angle made by line from person to axis origin
             slope_of_personDetected_withAxis = (self.BB_MIDDLE_BOTTOM_LINE[POINT_Y] - self.axis_origin[POINT_Y])/(self.BB_MIDDLE_BOTTOM_LINE[POINT_X] - self.axis_origin[POINT_X])
-            person_angleRad_axis = math.atan(slope_of_personDetected_withAxis)
-            angle_theta = math.degrees(person_angleRad_axis)
-            print("Angle is :", angle_theta, "  radians ", person_angleRad_axis)
+            turn_deviation = math.atan(slope_of_personDetected_withAxis)
+            angle_theta = math.degrees(turn_deviation)
+            print("Angle is :", angle_theta, " Radians ", turn_deviation)
             self.camera_raw_op = addOpenCVText(self.camera_raw_op, str(angle_theta), POS_IMAGE_BOTTOM_RIGHT_TEXT_1, color_ip=COLOR_GREEN)
-  
+            
+            # Angle is positive for forward right and negative for forward left
+            if((abs(turn_deviation) > TURN_FROM_AXIS_THRESHOLD)
+               and self.turn_deviation_flag != DIFF_CORRECTING):
+                self.turn_deviation_flag = DIFF_ERR_DEBOUNCING
+                self.turn_deviation_cntr += 1
 
-
-
-            if(self.depth_diff_flag == DIFF_CORRECTING):
-                # If difference is greater than threshold, move forward
-                if(depth_diff > 0):
-                        
-                    print("Moving right")
-                    followme_cmd_vel.linear.y = NEG_SIGN * LNR_VEL_Y_MIN
-                    self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'up' )
-
-                # If less, move backward
-                if(depth_diff < 0):
-                        
-                    print("Moving left")
-                    followme_cmd_vel.linear.y = POS_SIGN * LNR_VEL_Y_MIN
-                    self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'down' )
-
-
-
-                ## Resetting of aligning to centre
-                if(abs(depth_diff) <= DIST_PERSON_CAMERA_VALID_THRESHOLD):
-                    self.depth_diff_flag = DIFF_MAINTAINED
-                    self.depth_diff_cntr = 0
-                    print("Depth is maintained")
-
-
+                ## If too far, no need of debouncing
+                if(abs(turn_deviation) > TURN_FROM_AXIS_VERY_FAR):
+                    self.turn_deviation_flag = DIFF_CORRECTING
+                    self.turn_deviation_cntr = TURN_ERR_DEBOUNCE_THRESHOLD
             else:
-                print("Depth Maintained")
-                followme_cmd_vel.linear.y = 0.0
+                self.turn_deviation_cntr = 0
 
-                if(self.depth_diff_cntr >= DEPTH_ERR_DEBOUNCE_THRESHOLD):
-                    self.depth_diff_flag = DIFF_CORRECTING
-                elif(self.depth_diff_cntr == 0):
-                    self.depth_diff_flag = DIFF_MAINTAINED
+            print("Turn Deviation Flag : ", self.turn_deviation_flag, " Turn Deviation : ", turn_deviation, " Counter : ",self.turn_deviation_cntr)
+
 
 
 
             ## Only move left/right if the debounce threshold is reached
             if(self.centre_deviation_flag == DIFF_CORRECTING):
+                    
 
                 # If difference is less than threshold, move back
                 if(centre_deviation < 0):
@@ -577,6 +567,82 @@ class FollowMe_Go1():
                     self.centre_deviation_flag = DIFF_MAINTAINED
 
 
+
+            ## Only turn left/right if the debounce threshold is reached
+            if(self.turn_deviation_flag == DIFF_CORRECTING):
+
+                # For now only in forward direction
+                if(centre_deviation > 0):
+                    # If difference is less than threshold, turn left
+                    if(turn_deviation < 0):
+                        print("Person turned left")
+                        ## Only turn left
+                        followme_cmd_vel.angular.z = POS_SIGN * ANG_VEL_Z_MIN                    
+                        self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'bottomleft' )
+                
+                    # If more, turn rgiht
+                    if(turn_deviation > 0):
+                        print("Person turned right")
+                        ## Only turn right
+                        followme_cmd_vel.angular.z = NEG_SIGN * ANG_VEL_Z_MIN                    
+                        self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'topleft' )
+
+
+                ## Resetting of aligning to centre
+                if(abs(turn_deviation) < TURN_FROM_AXIS_THRESHOLD):
+                    self.turn_deviation_flag = DIFF_MAINTAINED
+                    self.turn_deviation_cntr = 0
+                    print("Turn is maintained")
+
+            else:
+                print("Turn Maintained")
+                followme_cmd_vel.angular.z = 0.0
+
+                if(self.turn_deviation_cntr >= TURN_ERR_DEBOUNCE_THRESHOLD):
+                    self.turn_deviation_flag = DIFF_CORRECTING
+                elif(self.turn_deviation_cntr == 0):
+                    self.turn_deviation_flag = DIFF_MAINTAINED
+
+            
+
+            if(self.depth_diff_flag == DIFF_CORRECTING):
+
+                
+                if(self.turn_deviation_flag != DIFF_CORRECTING):
+                    # If difference is greater than threshold, move forward
+                    if(depth_diff > 0):
+                            
+                        print("Moving right")
+                        followme_cmd_vel.linear.y = NEG_SIGN * LNR_VEL_Y_MIN
+                        self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'up' )
+
+                    # If less, move backward
+                    if(depth_diff < 0):
+                            
+                        print("Moving left")
+                        followme_cmd_vel.linear.y = POS_SIGN * LNR_VEL_Y_MIN
+                        self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'down' )
+
+
+
+                ## Resetting of aligning to centre
+                if(abs(depth_diff) <= DIST_PERSON_CAMERA_VALID_THRESHOLD):
+                    self.depth_diff_flag = DIFF_MAINTAINED
+                    self.depth_diff_cntr = 0
+                    print("Depth is maintained")
+
+
+            else:
+                print("Depth Maintained")
+                followme_cmd_vel.linear.y = 0.0
+
+                if(self.depth_diff_cntr >= DEPTH_ERR_DEBOUNCE_THRESHOLD):
+                    self.depth_diff_flag = DIFF_CORRECTING
+                elif(self.depth_diff_cntr == 0):
+                    self.depth_diff_flag = DIFF_MAINTAINED
+
+
+
         else:
             # Reset as no person seen
             # Not explicitly resetting as its already zero as init value
@@ -605,7 +671,7 @@ class FollowMe_Go1():
             print("Current Depth Pixel ratio is ",self.depth_pixel_ratio_mean )
             ## RESULT: 0.215
 
-        if(len(self.depth_pixel_ratio_array) > 10):
+        if(len(self.depth_pixel_ratio_array) > 100):
             self.depth_pixel_ratio_array = [self.depth_pixel_ratio_mean]
             print("Reseting the depth_pixel_ratio_array to save memory.")
 
@@ -629,7 +695,7 @@ class FollowMe_Go1():
                 ## Due to complications in mathematically calculating, it is calculated with test.
                 ## KEEP ROBOT in lay down position
                 ## NOT BOTH FOLLOWME AND CALIBRATING SHOULD BE ACTIVE
-                #self.calibratig() # purposefully kept wrong spelling, so no accidentally activating
+                #self.calibratng() # purposefully kept wrong spelling, so no accidentally activating
 
                 self.following()
 
@@ -768,6 +834,12 @@ def addOpenCVArrow(image, start_pos = [0, 0], direction = 'up', color_ip = DEFAU
 
     elif(direction == 'right'):
         end_pos = [start_pos[POINT_X]+ ARROW_LENGTH, start_pos[POINT_Y]]
+
+    elif(direction == 'bottomleft'):
+        end_pos = [start_pos[POINT_X]- ARROW_LENGTH, start_pos[POINT_Y] + ARROW_LENGTH]
+
+    elif(direction == 'topleft'):
+        end_pos = [start_pos[POINT_X]- ARROW_LENGTH, start_pos[POINT_Y] - ARROW_LENGTH]
 
 
 
