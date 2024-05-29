@@ -77,6 +77,10 @@ OBJ_BB_THICKNESS = 2
 DEFAULT_TEXT_SIZE = 1
 DEFAULT_TEXT_COLOR = COLOR_BLUE
 DEFAULT_TEXT_PIXEL = DEFAULT_TEXT_SIZE * 25 #Needed for adding text in images
+TEXT_SIZE_OBJ_INFO = 0.5
+TEXT_SIZE_CMD_VEL = 0.7
+TEXT_SIZE_POS = 0.7
+TRANSPARENCY_ALPHA_GRAPHS = 0.3
 
 ARROW_LENGTH = 50
 ARROW_TIP = 0.5
@@ -85,6 +89,8 @@ ARROW_THICKNESS = 12
 POS_IMAGE_TOP_LEFT_TEXT = [10,30]
 POS_IMAGE_BOTTOM_RIGHT_TEXT_1 = [370,330]
 POS_IMAGE_BOTTOM_RIGHT_TEXT_2 = [370,360]
+POS_IMAGE_TOP_RIGHT_TEXT_1_SIZE0_7 = [450,20]
+POS_IMAGE_TOP_RIGHT_TEXT_2_SIZE0_7 = [450,40]
 POS_IMAGE_BOTTOM_RIGHT_ARROW = [500,250]
 
 
@@ -262,7 +268,7 @@ class FollowMe_Go1():
                         ## Define points for easier access in drawing images
                         self.BB_CORNER_TOP_RIGHT_TEXT = (temp_obj_bb2d[POINT_TOP_RIGHT][POINT_X], temp_obj_bb2d[POINT_TOP_RIGHT][POINT_Y] + DEFAULT_TEXT_PIXEL)
                         idText = repr(object_detected.label) + " ID: "+ str(int(object_detected.id)) + " " + str(int(object_detected.confidence)) + "%"
-                        self.camera_raw_op = addOpenCVText(self.camera_raw_op, idText ,self.BB_CORNER_TOP_RIGHT_TEXT)
+                        self.camera_raw_op = addOpenCVText(self.camera_raw_op, idText ,self.BB_CORNER_TOP_RIGHT_TEXT, fontScale_ip=TEXT_SIZE_OBJ_INFO)
 
                         if(self.person_tracked_id == int(object_detected.id)):
 
@@ -319,14 +325,16 @@ class FollowMe_Go1():
                                                         )
                         
                         idText = repr(object_being_tracked.label) + " ID: "+ str(int(object_being_tracked.id)) + " " + str(int(object_being_tracked.confidence)) + "%"
-                        self.camera_raw_op = addOpenCVText(self.camera_raw_op, idText ,self.BB_CORNER_TOP_RIGHT_TEXT)
+                        self.camera_raw_op = addOpenCVText(self.camera_raw_op, idText ,self.BB_CORNER_TOP_RIGHT_TEXT, fontScale_ip=TEXT_SIZE_OBJ_INFO)
 
+                        # Draw thresholds
                         # Calculate centre point of camera and draw the lines for reference
                         print("Camera centre : ",self.image_vertical_centre_xpoint)
-                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint,0), (self.image_vertical_centre_xpoint,self.image_height), color_ip=COLOR_YELLOW)
-                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint-DIST_FROM_CAMERA_CENTRE_THRESHOLD,0), (self.image_vertical_centre_xpoint-DIST_FROM_CAMERA_CENTRE_THRESHOLD,self.image_height), color_ip=COLOR_YELLOW)
-                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint+DIST_FROM_CAMERA_CENTRE_THRESHOLD,0), (self.image_vertical_centre_xpoint+DIST_FROM_CAMERA_CENTRE_THRESHOLD,self.image_height), color_ip=COLOR_YELLOW)
+                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint,0), (self.image_vertical_centre_xpoint,self.image_height), color_ip=COLOR_YELLOW, alpha=TRANSPARENCY_ALPHA_GRAPHS + 0.2)
+                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint-DIST_FROM_CAMERA_CENTRE_THRESHOLD,0), (self.image_vertical_centre_xpoint-DIST_FROM_CAMERA_CENTRE_THRESHOLD,self.image_height), color_ip=COLOR_YELLOW, alpha=TRANSPARENCY_ALPHA_GRAPHS)
+                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint+DIST_FROM_CAMERA_CENTRE_THRESHOLD,0), (self.image_vertical_centre_xpoint+DIST_FROM_CAMERA_CENTRE_THRESHOLD,self.image_height), color_ip=COLOR_YELLOW, alpha=TRANSPARENCY_ALPHA_GRAPHS)
                      
+
                         # Calculate centre point of the detected person
                         print("Person centre : ",self.BB_MIDDLE_BOTTOM_LINE[POINT_X])
                         self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.BB_MIDDLE_BOTTOM_LINE[POINT_X],0), (self.BB_MIDDLE_BOTTOM_LINE[POINT_X],self.image_height), color_ip=COLOR_GREEN)
@@ -350,7 +358,7 @@ class FollowMe_Go1():
                         self.camera_raw_op = addOpenCVText(self.camera_raw_op, depthText, position=(
                                         int((self.image_middle_bottom_line[0]+ self.BB_MIDDLE_BOTTOM_LINE[0])/2),
                                         int((self.image_middle_bottom_line[1]+ self.BB_MIDDLE_BOTTOM_LINE[1])/2)),
-                                        color_ip=COLOR_RED
+                                        color_ip=COLOR_RED , fontScale_ip=TEXT_SIZE_POS
                                         )
                         
 
@@ -478,6 +486,10 @@ class FollowMe_Go1():
 
             print("Centre Deviation Flag : ", self.centre_deviation_flag, " Centre Deviation : ", centre_deviation, " Counter : ",self.centre_deviation_cntr)
 
+            
+            ## Calculate angle of turn
+            # Angle made by line from person to centre of bottom line
+            # minus 90
 
 
 
@@ -556,8 +568,8 @@ class FollowMe_Go1():
 
         ## Publish cmd vel
         self.prev_cmd_vel_linear_x =  followme_cmd_vel.linear.x
-        self.camera_raw_op = addOpenCVText(self.camera_raw_op, "Linear x  : " + str(followme_cmd_vel.linear.x)  , POS_IMAGE_BOTTOM_RIGHT_TEXT_1, color_ip=COLOR_GREEN)
-        self.camera_raw_op = addOpenCVText(self.camera_raw_op, "Linear y : " + str(followme_cmd_vel.linear.y)  , POS_IMAGE_BOTTOM_RIGHT_TEXT_2, color_ip=COLOR_GREEN)
+        self.camera_raw_op = addOpenCVText(self.camera_raw_op, "Linear x : " + str(followme_cmd_vel.linear.x)  , POS_IMAGE_TOP_RIGHT_TEXT_1_SIZE0_7, color_ip=COLOR_GREEN, fontScale_ip=TEXT_SIZE_CMD_VEL)
+        self.camera_raw_op = addOpenCVText(self.camera_raw_op, "Linear y : " + str(followme_cmd_vel.linear.y)  , POS_IMAGE_TOP_RIGHT_TEXT_2_SIZE0_7, color_ip=COLOR_GREEN, fontScale_ip=TEXT_SIZE_CMD_VEL)
   
 
         self.followme_cmdvel_pub.publish(followme_cmd_vel)            
@@ -650,13 +662,18 @@ class FollowMe_Go1():
 ##############    H E L P E R   F U N C T I O N S
 ################################################################
 def addOpenCVText(image,text_ip,position = (200, 200), fontScale_ip = DEFAULT_TEXT_SIZE, color_ip = DEFAULT_TEXT_COLOR ):
+    
+    howthick = 2
+    if(fontScale_ip < 0.7):
+        howthick = 1
+
     new_imagewithText = cv2.putText(    img = image,
                                         text = text_ip,
                                         org = position,
                                         fontFace = cv2.FONT_HERSHEY_SIMPLEX,
                                         fontScale = fontScale_ip,
                                         color = color_ip,
-                                        thickness = 2
+                                        thickness = howthick
                                     )
     return new_imagewithText
 
@@ -678,11 +695,18 @@ def addOpenCVTextAtCentre(image,text_ip,fontScale_ip = DEFAULT_TEXT_SIZE, color_
     return new_imagewithText
 
 
-def addOpenCVLine(image, start_pos = (0, 0), end_pos = (100, 100), color_ip = DEFAULT_TEXT_COLOR ):
-    new_imagewithLine = cv2.line(   image, start_pos, end_pos,
+def addOpenCVLine(image, start_pos = (0, 0), end_pos = (100, 100), color_ip = DEFAULT_TEXT_COLOR, alpha=1.0 ):
+
+    # Create a copy of the original image to draw the text layer
+    overlay = image.copy()
+
+    cv2.line(   overlay, start_pos, end_pos,
                                     color = color_ip,
                                     thickness = 2
-                                    )    
+                                    ) 
+    
+    new_imagewithLine = cv2.addWeighted(overlay, alpha, image, 1 - alpha, 0)
+
     return new_imagewithLine
 
 
