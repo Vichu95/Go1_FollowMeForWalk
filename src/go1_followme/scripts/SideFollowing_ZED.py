@@ -198,9 +198,10 @@ class FollowMe_Go1():
         self.depth_diff_flag = DIFF_MAINTAINED
         self.depth_diff_cntr = 0
         
-
+        self.axis_origin = (int(self.image_width/2), DIST_PERSON_CAMERA_TOBEKEPT_PIXEL)
+        
         ## CALIBRATION
-        self.depth_pixel_ratio_array = [ZED_RATIO_DEPTH_PIXEL]
+        self.depth_pixel_ratio_array = [ZED_RATIO_DEPTH_PIXEL] #todo
         self.depth_pixel_ratio_mean = ZED_RATIO_DEPTH_PIXEL # Calibrated on run
 
 
@@ -347,10 +348,10 @@ class FollowMe_Go1():
                         ## Draw depth line and mention depth
                         depthText = str(self.person_depth) + "cm"
                         print("Person Depth : ", depthText)
-                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, self.image_middle_bottom_line, self.BB_MIDDLE_BOTTOM_LINE, color_ip=COLOR_RED)                    
+                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.axis_origin[POINT_X],self.image_height), self.BB_MIDDLE_BOTTOM_LINE, color_ip=COLOR_RED)                    
                         self.camera_raw_op = addOpenCVText(self.camera_raw_op, depthText, position=(
-                                        int((self.image_middle_bottom_line[0]+ self.BB_MIDDLE_BOTTOM_LINE[0])/2),
-                                        int((self.image_middle_bottom_line[1]+ self.BB_MIDDLE_BOTTOM_LINE[1])/2)),
+                                        int((self.axis_origin[POINT_X] + self.BB_MIDDLE_BOTTOM_LINE[0])/2),
+                                        int((self.image_height+ self.BB_MIDDLE_BOTTOM_LINE[1])/2)),
                                         color_ip=COLOR_RED , fontScale_ip=TEXT_SIZE_POS
                                         )
                         
@@ -360,10 +361,10 @@ class FollowMe_Go1():
                         # self.calibrating()
 
                         # Calculate centre point of camera and draw the lines for reference
-                        print("Camera centre : ",self.image_vertical_centre_xpoint)
-                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint,0), (self.image_vertical_centre_xpoint,self.image_height), color_ip=COLOR_YELLOW, alpha=TRANSPARENCY_ALPHA_GRAPHS + 0.2)
-                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint-DIST_FROM_CAMERA_CENTRE_THRESHOLD,0), (self.image_vertical_centre_xpoint-DIST_FROM_CAMERA_CENTRE_THRESHOLD,self.image_height), color_ip=COLOR_YELLOW, alpha=TRANSPARENCY_ALPHA_GRAPHS)
-                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint+DIST_FROM_CAMERA_CENTRE_THRESHOLD,0), (self.image_vertical_centre_xpoint+DIST_FROM_CAMERA_CENTRE_THRESHOLD,self.image_height), color_ip=COLOR_YELLOW, alpha=TRANSPARENCY_ALPHA_GRAPHS)
+                        print("Camera centre : ",self.image_vertical_centre_xpoint, "Axis :", self.axis_origin)
+                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.axis_origin[POINT_X],0), (self.axis_origin[POINT_X],self.image_height), color_ip=COLOR_YELLOW, alpha=TRANSPARENCY_ALPHA_GRAPHS + 0.2)
+                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.axis_origin[POINT_X]-DIST_FROM_CAMERA_CENTRE_THRESHOLD,0), (self.axis_origin[POINT_X]-DIST_FROM_CAMERA_CENTRE_THRESHOLD,self.image_height), color_ip=COLOR_YELLOW, alpha=TRANSPARENCY_ALPHA_GRAPHS)
+                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.axis_origin[POINT_X]+DIST_FROM_CAMERA_CENTRE_THRESHOLD,0), (self.axis_origin[POINT_X]+DIST_FROM_CAMERA_CENTRE_THRESHOLD,self.image_height), color_ip=COLOR_YELLOW, alpha=TRANSPARENCY_ALPHA_GRAPHS)
                      
                         self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (0,DIST_PERSON_CAMERA_TOBEKEPT_PIXEL), (self.image_width, DIST_PERSON_CAMERA_TOBEKEPT_PIXEL), color_ip=COLOR_YELLOW, alpha=TRANSPARENCY_ALPHA_GRAPHS + 0.2)
                        
@@ -426,7 +427,7 @@ class FollowMe_Go1():
             # Check if the human is almost at the centre
 
                 # Check if they are close
-                if(abs(self.image_vertical_centre_xpoint - self.BB_MIDDLE_BOTTOM_LINE[POINT_X]) < DIST_FROM_CAMERA_CENTRE_THRESHOLD) :
+                if(abs(self.axis_origin[POINT_X] - self.BB_MIDDLE_BOTTOM_LINE[POINT_X]) < DIST_FROM_CAMERA_CENTRE_THRESHOLD) :
                     # If yes, change the state to following
                     self.state = 'FOLLOWING'
                     print("Its near")
@@ -482,7 +483,7 @@ class FollowMe_Go1():
 
 
 
-            centre_deviation = self.image_vertical_centre_xpoint - self.BB_MIDDLE_BOTTOM_LINE[POINT_X]
+            centre_deviation = self.axis_origin[POINT_X] - self.BB_MIDDLE_BOTTOM_LINE[POINT_X]
             if((abs(centre_deviation) > DIST_FROM_CAMERA_CENTRE_THRESHOLD)
                and self.centre_deviation_flag != DIFF_CORRECTING):
                 self.centre_deviation_flag = DIFF_ERR_DEBOUNCING
@@ -499,8 +500,8 @@ class FollowMe_Go1():
 
             
             ## Calculate angle of turn
-            # Angle made by line from person to centre of bottom line
-            # minus 90
+            # Angle made by line from person to centre of both thresholds
+            #slope_of_persondetected = (self.BB_MIDDLE_BOTTOM_LINE[POINT_X] - self.)/(self.BB_MIDDLE_BOTTOM_LINE[POINT_Y] - DIST_PERSON_CAMERA_TOBEKEPT_PIXEL)
 
 
 
@@ -588,7 +589,7 @@ class FollowMe_Go1():
 
 
 
-    def calibrating(self):
+    def calibrating(self): #todo
 
             
         ## Using only data closer to the distance to be maintained
