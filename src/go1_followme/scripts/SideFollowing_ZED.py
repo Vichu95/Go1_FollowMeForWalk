@@ -32,7 +32,7 @@ from go1_followme.msg import followme_state
 #ZED
 ZED_IMAGE_HEIGHT = 376
 ZED_IMAGE_WIDTH = 672
-
+ZED_RATIO_DEPTH_PIXEL = 0.261 # Check calibrating function
 
 ## Go1
 POS_SIGN = 1
@@ -198,6 +198,10 @@ class FollowMe_Go1():
         self.depth_diff_cntr = 0
         
 
+        ## CALIBRATION
+        self.depth_pixel_ratio_array = [ZED_RATIO_DEPTH_PIXEL]
+        self.depth_pixel_ratio_mean = ZED_RATIO_DEPTH_PIXEL # Calibrated on run
+
 
     def capture_camera(self):
 
@@ -327,18 +331,6 @@ class FollowMe_Go1():
                         idText = repr(object_being_tracked.label) + " ID: "+ str(int(object_being_tracked.id)) + " " + str(int(object_being_tracked.confidence)) + "%"
                         self.camera_raw_op = addOpenCVText(self.camera_raw_op, idText ,self.BB_CORNER_TOP_RIGHT_TEXT, fontScale_ip=TEXT_SIZE_OBJ_INFO)
 
-                        # Draw thresholds
-                        # Calculate centre point of camera and draw the lines for reference
-                        print("Camera centre : ",self.image_vertical_centre_xpoint)
-                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint,0), (self.image_vertical_centre_xpoint,self.image_height), color_ip=COLOR_YELLOW, alpha=TRANSPARENCY_ALPHA_GRAPHS + 0.2)
-                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint-DIST_FROM_CAMERA_CENTRE_THRESHOLD,0), (self.image_vertical_centre_xpoint-DIST_FROM_CAMERA_CENTRE_THRESHOLD,self.image_height), color_ip=COLOR_YELLOW, alpha=TRANSPARENCY_ALPHA_GRAPHS)
-                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint+DIST_FROM_CAMERA_CENTRE_THRESHOLD,0), (self.image_vertical_centre_xpoint+DIST_FROM_CAMERA_CENTRE_THRESHOLD,self.image_height), color_ip=COLOR_YELLOW, alpha=TRANSPARENCY_ALPHA_GRAPHS)
-                     
-
-                        # Calculate centre point of the detected person
-                        print("Person centre : ",self.BB_MIDDLE_BOTTOM_LINE[POINT_X])
-                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.BB_MIDDLE_BOTTOM_LINE[POINT_X],0), (self.BB_MIDDLE_BOTTOM_LINE[POINT_X],self.image_height), color_ip=COLOR_GREEN)
-
 
                         # Make sure the mask is available for detected person
                         if object_being_tracked.mask.is_init():
@@ -361,6 +353,24 @@ class FollowMe_Go1():
                                         color_ip=COLOR_RED , fontScale_ip=TEXT_SIZE_POS
                                         )
                         
+
+
+                        # Draw thresholds
+                        self.calibrating()
+
+                        # Calculate centre point of camera and draw the lines for reference
+                        print("Camera centre : ",self.image_vertical_centre_xpoint)
+                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint,0), (self.image_vertical_centre_xpoint,self.image_height), color_ip=COLOR_YELLOW, alpha=TRANSPARENCY_ALPHA_GRAPHS + 0.2)
+                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint-DIST_FROM_CAMERA_CENTRE_THRESHOLD,0), (self.image_vertical_centre_xpoint-DIST_FROM_CAMERA_CENTRE_THRESHOLD,self.image_height), color_ip=COLOR_YELLOW, alpha=TRANSPARENCY_ALPHA_GRAPHS)
+                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.image_vertical_centre_xpoint+DIST_FROM_CAMERA_CENTRE_THRESHOLD,0), (self.image_vertical_centre_xpoint+DIST_FROM_CAMERA_CENTRE_THRESHOLD,self.image_height), color_ip=COLOR_YELLOW, alpha=TRANSPARENCY_ALPHA_GRAPHS)
+                     
+                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (0,int(DIST_PERSON_CAMERA_TOBEKEPT/self.depth_pixel_ratio_mean)), (self.image_width, int(DIST_PERSON_CAMERA_TOBEKEPT/self.depth_pixel_ratio_mean)), color_ip=COLOR_YELLOW, alpha=TRANSPARENCY_ALPHA_GRAPHS + 0.2)
+                       
+
+                        # Calculate centre point of the detected person
+                        print("Person centre : ",self.BB_MIDDLE_BOTTOM_LINE[POINT_X])
+                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.BB_MIDDLE_BOTTOM_LINE[POINT_X],0), (self.BB_MIDDLE_BOTTOM_LINE[POINT_X],self.image_height), color_ip=COLOR_GREEN)
+
 
                 else:
                     ## No objects detected
@@ -575,6 +585,25 @@ class FollowMe_Go1():
         self.followme_cmdvel_pub.publish(followme_cmd_vel)            
 
 
+
+
+    def calibrating(self):
+
+            
+        ## Using only data closer to the distance to be maintained
+        if(abs(self.person_depth - DIST_PERSON_CAMERA_TOBEKEPT) <= DIST_PERSON_CAMERA_DIFF_THRESHOLD):
+
+
+            self.depth_pixel_ratio_array.append(self.person_depth/ self.BB_MIDDLE_BOTTOM_LINE[POINT_Y])
+            self.depth_pixel_ratio_mean = sum(self.depth_pixel_ratio_array) / len(self.depth_pixel_ratio_array)
+            print("Current Depth Pixel ratio is ",self.depth_pixel_ratio_mean )
+            ## RESULT: 0.215
+
+        if(len(self.depth_pixel_ratio_array) > 10):
+            self.depth_pixel_ratio_array = [self.depth_pixel_ratio_mean]
+            print("Reseting the depth_pixel_ratio_array to save memory.")
+
+
     def followme_run(self):
 
         print("Executing run")
@@ -585,9 +614,17 @@ class FollowMe_Go1():
             self.capture_camera()
 
             if self.state == 'INIT':
-                self.starting()
+                self.starting()            
 
             elif self.state == 'FOLLOWING':
+
+
+                ## This function is used to calculate the pixel value that corresponds to the depth to be maintained with robot dog.
+                ## Due to complications in mathematically calculating, it is calculated with test.
+                ## KEEP ROBOT in lay down position
+                ## NOT BOTH FOLLOWME AND CALIBRATING SHOULD BE ACTIVE
+                #self.calibratig() # purposefully kept wrong spelling, so no accidentally activating
+
                 self.following()
 
 
