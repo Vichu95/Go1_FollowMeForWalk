@@ -501,8 +501,12 @@ class FollowMe_Go1():
             
             ## Calculate angle of turn
             # Angle made by line from person to centre of both thresholds
-            #slope_of_persondetected = (self.BB_MIDDLE_BOTTOM_LINE[POINT_X] - self.)/(self.BB_MIDDLE_BOTTOM_LINE[POINT_Y] - DIST_PERSON_CAMERA_TOBEKEPT_PIXEL)
-
+            slope_of_personDetected_withAxis = (self.BB_MIDDLE_BOTTOM_LINE[POINT_Y] - self.axis_origin[POINT_Y])/(self.BB_MIDDLE_BOTTOM_LINE[POINT_X] - self.axis_origin[POINT_X])
+            person_angleRad_axis = math.atan(slope_of_personDetected_withAxis)
+            angle_theta = math.degrees(person_angleRad_axis)
+            print("Angle is :", angle_theta, "  radians ", person_angleRad_axis)
+            self.camera_raw_op = addOpenCVText(self.camera_raw_op, str(angle_theta), POS_IMAGE_BOTTOM_RIGHT_TEXT_1, color_ip=COLOR_GREEN)
+  
 
 
 
