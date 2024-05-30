@@ -706,7 +706,13 @@ class FollowMe_Go1():
                             
                         print("Moving left")
                         followme_cmd_vel.linear.y = POS_SIGN * LNR_VEL_Y_MIN
-                        self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'down' )
+
+                        if(self.person_depth < DIST_PERSON_CAMERA_TOO_CLOSE):
+                            followme_cmd_vel.linear.x = 0.0
+                            print("Resetting forward velocity")
+                            self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'down' , color_ip=COLOR_RED)
+                        else:
+                            self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'down' )
 
                 else:
                     print("Skipping depth deviation correction")
