@@ -549,7 +549,7 @@ class FollowMe_Go1():
             # - Skip check when person is at centre
             # - Skip turning for now when person moves back
             check_turn_deviation = True
-            if(self.centre_deviation_flag != DIFF_CORRECTING
+            if((abs(centre_deviation) > DIST_FROM_CAMERA_CENTRE_THRESHOLD)
                or centre_deviation < 0):
                 print("Skipping turn deviation check")
                 check_turn_deviation = False
@@ -688,10 +688,10 @@ class FollowMe_Go1():
 
             
 
-            ## Only move in y direction, when nothing else is going on
+            ## Only move in y direction, when turning else is not going on
             if(self.depth_diff_flag == DIFF_CORRECTING):
                 
-                if(self.turn_deviation_flag != DIFF_CORRECTING and self.centre_deviation_flag != DIFF_CORRECTING):
+                if(self.turn_deviation_flag != DIFF_CORRECTING):
                     # If difference is greater than threshold, move forward
                     if(depth_diff > 0):
                             
