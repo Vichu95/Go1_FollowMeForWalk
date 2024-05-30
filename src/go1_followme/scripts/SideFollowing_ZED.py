@@ -111,12 +111,12 @@ POS_IMAGE_BOTTOM_RIGHT_ARROW = [500,250]
 
 # ## LAB Testing values
 ## Object detection
-LNR_VEL_Y_MIN = 0.111
+LNR_VEL_Y_MIN = 0.15
 
 LNR_VEL_X_MIN = 0.15
 LNR_VEL_X_OK_MIN = 0.111
-LNR_VEL_X_OK_MAX = 0.3
-LNR_VEL_X_TOO_FAR = 0.3
+LNR_VEL_X_OK_MAX = 0.4
+LNR_VEL_X_TOO_FAR = 0.5
 LNR_VEL_X_POS_STEP = 0.05
 
 ANG_VEL_Z_MIN = 0.3
@@ -581,6 +581,8 @@ class FollowMe_Go1():
             # CORRECTING DEVIATIONS
             #####
 
+            ## Handling edges at left turn. Between DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE and centre, if depth is too less, do only depth
+            ## Outside DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE, priority for turn only
 
             ## Only move left/right if the debounce threshold is reached
             if(self.centre_deviation_flag == DIFF_CORRECTING):                    
@@ -602,27 +604,27 @@ class FollowMe_Go1():
 
                     else:
 
-                        # # If centre_deviation is more, move forward | No moving forward when turning left at small forward deviations
-                        # if(not(self.turn_deviation_flag == DIFF_CORRECTING and turn_deviation < 0)
-                        # or abs(centre_deviation) >= DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE):
+                        # If centre_deviation is more, move forward | No moving forward when turning left at small forward deviations
+                        if(not(self.turn_deviation_flag == DIFF_CORRECTING and turn_deviation < 0)
+                        or abs(centre_deviation) >= DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE):
                         
                             print("Person moved front")
 
-                            speed_slope = (LNR_VEL_X_OK_MAX - LNR_VEL_X_OK_MIN)/(DIST_FROM_CAMERA_CENTRE_TOO_FAR - DIST_FROM_CAMERA_CENTRE_THRESHOLD)
-                            followme_cmd_vel.linear.x  = centre_deviation * speed_slope + LNR_VEL_X_OK_MIN
+                            speed_slope = (LNR_VEL_X_OK_MAX - LNR_VEL_X_OK_MIN)/(DIST_FROM_CAMERA_CENTRE_TOO_FAR - DIST_FROM_CAMERA_CENTRE_NEAR)
+                            followme_cmd_vel.linear.x  = abs(centre_deviation - DIST_FROM_CAMERA_CENTRE_NEAR) * speed_slope + LNR_VEL_X_OK_MIN
                             print("Slope = " + str(speed_slope) + " Linear x speed = " + str(followme_cmd_vel.linear.x))
 
                             self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left' )
 
-
+                    print("Previous speed x",  self.prev_cmd_vel_linear_x)
                     ## Ramping up of cmd_vel to avoid sudden high values above min value
                     if(followme_cmd_vel.linear.x - self.prev_cmd_vel_linear_x > LNR_VEL_X_POS_STEP ):
                         # Increment with step size
                         followme_cmd_vel.linear.x = self.prev_cmd_vel_linear_x + LNR_VEL_X_POS_STEP                        
                         print("Ramping up the linear x by ", LNR_VEL_X_POS_STEP, " and is now ", followme_cmd_vel.linear.x )
-                        if(followme_cmd_vel.linear.x < LNR_VEL_X_OK_MIN):
-                            followme_cmd_vel.linear.x = LNR_VEL_X_OK_MIN
-                            print("Keeping the linear x at minimum configured velocity")
+                    if(followme_cmd_vel.linear.x < LNR_VEL_X_OK_MIN):
+                        followme_cmd_vel.linear.x = LNR_VEL_X_OK_MIN
+                        print("Keeping the linear x at minimum configured velocity")
 
 
                 ## Resetting of aligning to centre
@@ -705,7 +707,7 @@ class FollowMe_Go1():
             if(self.depth_diff_flag == DIFF_CORRECTING):
                 
                 if(self.turn_deviation_flag != DIFF_CORRECTING
-                   or self.person_depth < DIST_PERSON_CAMERA_TOO_CLOSE):
+                   or (self.person_depth < DIST_PERSON_CAMERA_TOO_CLOSE and abs(centre_deviation) < DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE)): #Handle left edge
                     # If difference is greater than threshold, move forward
                     if(depth_diff > 0):
                             
@@ -719,7 +721,7 @@ class FollowMe_Go1():
                         print("Moving left")
                         followme_cmd_vel.linear.y = POS_SIGN * LNR_VEL_Y_MIN
 
-                        if(self.person_depth < DIST_PERSON_CAMERA_TOO_CLOSE):
+                        if(self.person_depth < DIST_PERSON_CAMERA_TOO_CLOSE and abs(centre_deviation) < DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE): #Handle left edge
                             followme_cmd_vel.linear.x = 0.0
                             print("Resetting forward velocity")
                             self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'down' , color_ip=COLOR_RED)
