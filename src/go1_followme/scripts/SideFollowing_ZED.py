@@ -112,10 +112,12 @@ POS_IMAGE_BOTTOM_RIGHT_ARROW = [500,250]
 # ## LAB Testing values
 ## Object detection
 LNR_VEL_Y_MIN = 0.111
+
 LNR_VEL_X_MIN = 0.15
 LNR_VEL_X_OK_MIN = 0.111
 LNR_VEL_X_OK_MAX = 0.3
 LNR_VEL_X_TOO_FAR = 0.3
+LNR_VEL_X_POS_STEP = 0.05
 
 ANG_VEL_Z_MIN = 0.3
 ANG_VEL_Z_OK_MIN = 0.3
@@ -220,6 +222,7 @@ class FollowMe_Go1():
         self.turn_deviation_cntr = 0
         
         self.axis_origin = (int(self.image_width/2), DIST_PERSON_CAMERA_TOBEKEPT_PIXEL)
+        self.prev_cmd_vel_linear_x = 0.0
         
         ## CALIBRATION
         self.depth_pixel_ratio_array = [ZED_RATIO_DEPTH_PIXEL] #todo
@@ -580,8 +583,7 @@ class FollowMe_Go1():
 
 
             ## Only move left/right if the debounce threshold is reached
-            if(self.centre_deviation_flag == DIFF_CORRECTING):
-                    
+            if(self.centre_deviation_flag == DIFF_CORRECTING):                    
 
                 # If difference is less than threshold, move back
                 if(centre_deviation < 0):
@@ -611,6 +613,16 @@ class FollowMe_Go1():
                             print("Slope = " + str(speed_slope) + " Linear x speed = " + str(followme_cmd_vel.linear.x))
 
                             self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left' )
+
+
+                    ## Ramping up of cmd_vel to avoid sudden high values above min value
+                    if(followme_cmd_vel.linear.x - self.prev_cmd_vel_linear_x > LNR_VEL_X_POS_STEP ):
+                        # Increment with step size
+                        followme_cmd_vel.linear.x = self.prev_cmd_vel_linear_x + LNR_VEL_X_POS_STEP                        
+                        print("Ramping up the linear x by ", LNR_VEL_X_POS_STEP, " and is now ", followme_cmd_vel.linear.x )
+                        if(followme_cmd_vel.linear.x < LNR_VEL_X_OK_MIN):
+                            followme_cmd_vel.linear.x = LNR_VEL_X_OK_MIN
+                            print("Keeping the linear x at minimum configured velocity")
 
 
                 ## Resetting of aligning to centre
@@ -742,7 +754,6 @@ class FollowMe_Go1():
             print("No person detected")
 
         ## Publish cmd vel
-        self.prev_cmd_vel_linear_x =  followme_cmd_vel.linear.x
         self.camera_raw_op = addOpenCVText(self.camera_raw_op, "Linear x  : " + str(followme_cmd_vel.linear.x)  , POS_IMAGE_TOP_RIGHT_TEXT_1_SIZE0_7, color_ip=COLOR_GREEN, fontScale_ip=TEXT_SIZE_CMD_VEL)
         self.camera_raw_op = addOpenCVText(self.camera_raw_op, "Linear y  : " + str(followme_cmd_vel.linear.y)  , POS_IMAGE_TOP_RIGHT_TEXT_2_SIZE0_7, color_ip=COLOR_GREEN, fontScale_ip=TEXT_SIZE_CMD_VEL)
         self.camera_raw_op = addOpenCVText(self.camera_raw_op, "Angular z : " + str(followme_cmd_vel.angular.z)  , POS_IMAGE_TOP_RIGHT_TEXT_3_SIZE0_7, color_ip=COLOR_GREEN, fontScale_ip=TEXT_SIZE_CMD_VEL)
@@ -772,6 +783,8 @@ class FollowMe_Go1():
 
     def publish_cmdvel_safe(self,followme_cmd_vel):
         # Control and Safety checks for final published cmd vel
+
+        self.prev_cmd_vel_linear_x =  followme_cmd_vel.linear.x
 
         # Set zeroes to all unused variables
         followme_cmd_vel.linear.z = 0.0
