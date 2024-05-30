@@ -49,11 +49,11 @@ DIST_PERSON_CAMERA_VALID_THRESHOLD = 5
 DIST_PERSON_CAMERA_DIFF_THRESHOLD = 10
 DIST_PERSON_CAMERA_VERY_FAR = 100
 DIST_FROM_CAMERA_CENTRE_TOO_FAR = (int(ZED_IMAGE_WIDTH * 0.34))
-DIST_FROM_CAMERA_CENTRE_THRESHOLD = (int(ZED_IMAGE_WIDTH * 0.0625))
+DIST_FROM_CAMERA_CENTRE_THRESHOLD = (int(ZED_IMAGE_WIDTH * 0.1))
 DIST_FROM_CAMERA_CENTRE_NEAR = (int(ZED_IMAGE_WIDTH * 0.03125))
 TURN_FROM_AXIS_THRESHOLD = math.radians(3)
 TURN_FROM_AXIS_VERY_FAR = math.radians(40)
-TURN_FROM_AXIS_NEAR = math.radians(0)
+TURN_FROM_AXIS_NEAR = math.radians(1)
 
 POINT_X= 0
 POINT_Y = 1
@@ -67,7 +67,7 @@ DIFF_ERR_DEBOUNCING = 1
 DIFF_CORRECTING = 2
 CENTRE_ERR_DEBOUNCE_THRESHOLD = 4
 DEPTH_ERR_DEBOUNCE_THRESHOLD = 3
-TURN_ERR_DEBOUNCE_THRESHOLD = 4
+TURN_ERR_DEBOUNCE_THRESHOLD = 6
 
 TRACKING_ID_INI = 999
 
@@ -96,6 +96,8 @@ POS_IMAGE_BOTTOM_RIGHT_TEXT_1 = [370,330]
 POS_IMAGE_BOTTOM_RIGHT_TEXT_2 = [370,360]
 POS_IMAGE_TOP_RIGHT_TEXT_1_SIZE0_7 = [450,20]
 POS_IMAGE_TOP_RIGHT_TEXT_2_SIZE0_7 = [450,40]
+POS_IMAGE_TOP_RIGHT_TEXT_3_SIZE0_7 = [450,60]
+POS_IMAGE_TOP_RIGHT_TEXT_4_SIZE0_7 = [450,80]
 POS_IMAGE_BOTTOM_RIGHT_ARROW = [500,250]
 
 
@@ -105,7 +107,7 @@ POS_IMAGE_BOTTOM_RIGHT_ARROW = [500,250]
 # ## LAB Testing values
 ## Object detection
 LNR_VEL_Y_MIN = 0.111
-LNR_VEL_X_MIN = 0.111
+LNR_VEL_X_MIN = 0.15
 ANG_VEL_Z_MIN = 0.3
 
 ################################################################
@@ -472,6 +474,10 @@ class FollowMe_Go1():
 
             print("Following the person ")
 
+            #####
+            # DEPTH : Distance between human and robot standing side to side
+            ####
+
             # Calculate the depth difference from distance to be kept and current depth
             depth_diff = self.person_depth - DIST_PERSON_CAMERA_TOBEKEPT
             
@@ -490,6 +496,9 @@ class FollowMe_Go1():
             print("Depth Flag : ", self.depth_diff_flag, " Depth Difference : ", depth_diff, " Counter : ",self.depth_diff_cntr)
 
 
+            #####
+            # CENTRE : Distance human moved in forward or backward with robot on side
+            ####
 
 
             centre_deviation = self.axis_origin[POINT_X] - self.BB_MIDDLE_BOTTOM_LINE[POINT_X]
@@ -508,6 +517,9 @@ class FollowMe_Go1():
             print("Centre Deviation Flag : ", self.centre_deviation_flag, " Centre Deviation : ", centre_deviation, " Counter : ",self.centre_deviation_cntr)
 
 
+            #####
+            # TURN : Distance human turned
+            ####
 
             
             ## Calculate angle of turn : Angle made by line from person to axis origin
@@ -515,11 +527,22 @@ class FollowMe_Go1():
             turn_deviation = math.atan(slope_of_personDetected_withAxis)
             angle_theta = math.degrees(turn_deviation)
             print("Angle is :", angle_theta, " Radians ", turn_deviation)
-            self.camera_raw_op = addOpenCVText(self.camera_raw_op, str(angle_theta), POS_IMAGE_BOTTOM_RIGHT_TEXT_1, color_ip=COLOR_GREEN)
+            self.camera_raw_op = addOpenCVText(self.camera_raw_op, "Turn Angle: " + str(angle_theta)  , POS_IMAGE_TOP_RIGHT_TEXT_4_SIZE0_7, color_ip=COLOR_GREEN, fontScale_ip=TEXT_SIZE_CMD_VEL)
+            
+
+            ## Is turn deviations needed to checked?
+            # - Skip check when person is at centre
+            # - Skip turning for now when person moves back
+            check_turn_deviation = True
+            if(self.centre_deviation_flag != DIFF_CORRECTING
+               or centre_deviation < 0):
+                print("Skipping turn deviation check")
+                check_turn_deviation = False
             
             # Angle is positive for forward right and negative for forward left
             if((abs(turn_deviation) > TURN_FROM_AXIS_THRESHOLD)
-               and self.turn_deviation_flag != DIFF_CORRECTING):
+               and self.turn_deviation_flag != DIFF_CORRECTING
+               and check_turn_deviation == True):
                 self.turn_deviation_flag = DIFF_ERR_DEBOUNCING
                 self.turn_deviation_cntr += 1
 
@@ -534,6 +557,10 @@ class FollowMe_Go1():
 
 
 
+            #####
+            # CORRECTING DEVIATIONS
+            #####
+
 
             ## Only move left/right if the debounce threshold is reached
             if(self.centre_deviation_flag == DIFF_CORRECTING):
@@ -545,11 +572,12 @@ class FollowMe_Go1():
                     followme_cmd_vel.linear.x  = NEG_SIGN * LNR_VEL_X_MIN
                     self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'right' )
             
-                # If more, move forward
-                if(centre_deviation > 0):
-                    print("Person moved front")
-                    followme_cmd_vel.linear.x  = POS_SIGN * LNR_VEL_X_MIN
-                    self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left' )
+                # If centre_deviation is more, move forward | No moving forward when turning left
+                if(not(self.turn_deviation_flag == DIFF_CORRECTING and turn_deviation < 0)):
+                    if(centre_deviation > 0):
+                        print("Person moved front")
+                        followme_cmd_vel.linear.x  = POS_SIGN * LNR_VEL_X_MIN
+                        self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left' )
 
 
                 ## Resetting of aligning to centre
@@ -572,21 +600,19 @@ class FollowMe_Go1():
             ## Only turn left/right if the debounce threshold is reached
             if(self.turn_deviation_flag == DIFF_CORRECTING):
 
-                # For now only in forward direction
-                if(centre_deviation > 0):
-                    # If difference is less than threshold, turn left
-                    if(turn_deviation < 0):
-                        print("Person turned left")
-                        ## Only turn left
-                        followme_cmd_vel.angular.z = POS_SIGN * ANG_VEL_Z_MIN                    
-                        self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'bottomleft' )
-                
-                    # If more, turn rgiht
-                    if(turn_deviation > 0):
-                        print("Person turned right")
-                        ## Only turn right
-                        followme_cmd_vel.angular.z = NEG_SIGN * ANG_VEL_Z_MIN                    
-                        self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'topleft' )
+                # If difference is less than threshold, turn left
+                if(turn_deviation < 0):
+                    print("Person turned left")
+                    ## Only turn left
+                    followme_cmd_vel.angular.z = POS_SIGN * ANG_VEL_Z_MIN                    
+                    self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'bottomleft' )
+            
+                # If more, turn rgiht
+                if(turn_deviation > 0):
+                    print("Person turned right")
+                    ## Only turn right
+                    followme_cmd_vel.angular.z = NEG_SIGN * ANG_VEL_Z_MIN                    
+                    self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'topleft' )
 
 
                 ## Resetting of aligning to centre
@@ -652,8 +678,9 @@ class FollowMe_Go1():
 
         ## Publish cmd vel
         self.prev_cmd_vel_linear_x =  followme_cmd_vel.linear.x
-        self.camera_raw_op = addOpenCVText(self.camera_raw_op, "Linear x : " + str(followme_cmd_vel.linear.x)  , POS_IMAGE_TOP_RIGHT_TEXT_1_SIZE0_7, color_ip=COLOR_GREEN, fontScale_ip=TEXT_SIZE_CMD_VEL)
-        self.camera_raw_op = addOpenCVText(self.camera_raw_op, "Linear y : " + str(followme_cmd_vel.linear.y)  , POS_IMAGE_TOP_RIGHT_TEXT_2_SIZE0_7, color_ip=COLOR_GREEN, fontScale_ip=TEXT_SIZE_CMD_VEL)
+        self.camera_raw_op = addOpenCVText(self.camera_raw_op, "Linear x  : " + str(followme_cmd_vel.linear.x)  , POS_IMAGE_TOP_RIGHT_TEXT_1_SIZE0_7, color_ip=COLOR_GREEN, fontScale_ip=TEXT_SIZE_CMD_VEL)
+        self.camera_raw_op = addOpenCVText(self.camera_raw_op, "Linear y  : " + str(followme_cmd_vel.linear.y)  , POS_IMAGE_TOP_RIGHT_TEXT_2_SIZE0_7, color_ip=COLOR_GREEN, fontScale_ip=TEXT_SIZE_CMD_VEL)
+        self.camera_raw_op = addOpenCVText(self.camera_raw_op, "Angular z : " + str(followme_cmd_vel.angular.z)  , POS_IMAGE_TOP_RIGHT_TEXT_3_SIZE0_7, color_ip=COLOR_GREEN, fontScale_ip=TEXT_SIZE_CMD_VEL)
   
 
         self.followme_cmdvel_pub.publish(followme_cmd_vel)            
