@@ -737,7 +737,7 @@ class FollowMe_Go1():
         self.camera_raw_op = addOpenCVText(self.camera_raw_op, "Angular z : " + str(followme_cmd_vel.angular.z)  , POS_IMAGE_TOP_RIGHT_TEXT_3_SIZE0_7, color_ip=COLOR_GREEN, fontScale_ip=TEXT_SIZE_CMD_VEL)
   
 
-        self.followme_cmdvel_pub.publish(followme_cmd_vel)            
+        self.publish_cmdvel_safe(followme_cmd_vel)           
 
 
 
@@ -758,6 +758,16 @@ class FollowMe_Go1():
             self.depth_pixel_ratio_array = [self.depth_pixel_ratio_mean]
             print("Reseting the depth_pixel_ratio_array to save memory.")
 
+
+    def publish_cmdvel_safe(self,followme_cmd_vel):
+        # Control and Safety checks for final published cmd vel
+
+        # Set zeroes to all unused variables
+        followme_cmd_vel.linear.z = 0.0
+        followme_cmd_vel.angular.x = 0.0
+        followme_cmd_vel.angular.y = 0.0
+
+        self.followme_cmdvel_pub.publish(followme_cmd_vel)        
 
     def followme_run(self):
 
@@ -836,7 +846,7 @@ class FollowMe_Go1():
         followme_cmd_vel.angular.z = 0.0
 
         ## Publish cmd vel
-        self.followme_cmdvel_pub.publish(followme_cmd_vel)
+        self.publish_cmdvel_safe(followme_cmd_vel)
                 
 
 
