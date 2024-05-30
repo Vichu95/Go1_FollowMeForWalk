@@ -49,6 +49,7 @@ DIST_PERSON_CAMERA_TOBEKEPT_PIXEL = 310 #Found out as an average value of pixel 
 DIST_PERSON_CAMERA_VALID_THRESHOLD = 5
 DIST_PERSON_CAMERA_DIFF_THRESHOLD = 10
 DIST_PERSON_CAMERA_VERY_FAR = 130
+DIST_PERSON_CAMERA_TOO_CLOSE = 50
 
 DIST_FROM_CAMERA_CENTRE_TOO_FAR = (int(ZED_IMAGE_WIDTH * 0.34))
 DIST_FROM_CAMERA_CENTRE_THRESHOLD = (int(ZED_IMAGE_WIDTH * 0.1))
@@ -691,7 +692,8 @@ class FollowMe_Go1():
             ## Only move in y direction, when turning else is not going on
             if(self.depth_diff_flag == DIFF_CORRECTING):
                 
-                if(self.turn_deviation_flag != DIFF_CORRECTING):
+                if(self.turn_deviation_flag != DIFF_CORRECTING
+                   or self.person_depth < DIST_PERSON_CAMERA_TOO_CLOSE):
                     # If difference is greater than threshold, move forward
                     if(depth_diff > 0):
                             
@@ -769,6 +771,11 @@ class FollowMe_Go1():
         followme_cmd_vel.linear.z = 0.0
         followme_cmd_vel.angular.x = 0.0
         followme_cmd_vel.angular.y = 0.0
+
+        # No angular when there is lienar y
+        if(followme_cmd_vel.linear.y != 0.0):
+            followme_cmd_vel.angular.z = 0.0
+            print("Reseting angular velocity to zero")
 
         self.followme_cmdvel_pub.publish(followme_cmd_vel)        
 
