@@ -43,14 +43,18 @@ NEG_SIGN = -1
 ## Object detection
 OBJECT_DETECTION_ACCURACY_THRESHOLD = 55
 OBJECT_DETECTION_ACCURACY_THRESHOLD_REASSIGN = 60
+
 DIST_PERSON_CAMERA_TOBEKEPT = 85
 DIST_PERSON_CAMERA_TOBEKEPT_PIXEL = 310 #Found out as an average value of pixel for 70cm depth by running the code [70,265] [60,280] [85,310]
 DIST_PERSON_CAMERA_VALID_THRESHOLD = 5
 DIST_PERSON_CAMERA_DIFF_THRESHOLD = 10
-DIST_PERSON_CAMERA_VERY_FAR = 100
+DIST_PERSON_CAMERA_VERY_FAR = 130
+
 DIST_FROM_CAMERA_CENTRE_TOO_FAR = (int(ZED_IMAGE_WIDTH * 0.34))
 DIST_FROM_CAMERA_CENTRE_THRESHOLD = (int(ZED_IMAGE_WIDTH * 0.1))
 DIST_FROM_CAMERA_CENTRE_NEAR = (int(ZED_IMAGE_WIDTH * 0.03125))
+DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE = (int(ZED_IMAGE_WIDTH * 0.25))
+
 TURN_FROM_AXIS_THRESHOLD = math.radians(3)
 TURN_FROM_AXIS_VERY_FAR = math.radians(40)
 TURN_FROM_AXIS_NEAR = math.radians(1)
@@ -65,9 +69,9 @@ POINT_BOTTOM_LEFT = 3
 DIFF_MAINTAINED = 0
 DIFF_ERR_DEBOUNCING = 1
 DIFF_CORRECTING = 2
-CENTRE_ERR_DEBOUNCE_THRESHOLD = 4
+CENTRE_ERR_DEBOUNCE_THRESHOLD = 3
 DEPTH_ERR_DEBOUNCE_THRESHOLD = 3
-TURN_ERR_DEBOUNCE_THRESHOLD = 6
+TURN_ERR_DEBOUNCE_THRESHOLD = 3
 
 TRACKING_ID_INI = 999
 
@@ -108,7 +112,14 @@ POS_IMAGE_BOTTOM_RIGHT_ARROW = [500,250]
 ## Object detection
 LNR_VEL_Y_MIN = 0.111
 LNR_VEL_X_MIN = 0.15
+LNR_VEL_X_OK_MIN = 0.111
+LNR_VEL_X_OK_MAX = 0.3
+LNR_VEL_X_TOO_FAR = 0.3
+
 ANG_VEL_Z_MIN = 0.3
+ANG_VEL_Z_OK_MIN = 0.3
+ANG_VEL_Z_OK_MAX = 0.6
+ANG_VEL_Z_TOO_FAR = 0.7
 
 ################################################################
 ##############    C L A S S E S
@@ -374,6 +385,10 @@ class FollowMe_Go1():
                         self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.axis_origin[POINT_X],0), (self.axis_origin[POINT_X],self.image_height), color_ip=COLOR_YELLOW, alpha=TRANSPARENCY_ALPHA_GRAPHS + 0.2)
                         self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.axis_origin[POINT_X]-DIST_FROM_CAMERA_CENTRE_THRESHOLD,0), (self.axis_origin[POINT_X]-DIST_FROM_CAMERA_CENTRE_THRESHOLD,self.image_height), color_ip=COLOR_YELLOW, alpha=TRANSPARENCY_ALPHA_GRAPHS)
                         self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.axis_origin[POINT_X]+DIST_FROM_CAMERA_CENTRE_THRESHOLD,0), (self.axis_origin[POINT_X]+DIST_FROM_CAMERA_CENTRE_THRESHOLD,self.image_height), color_ip=COLOR_YELLOW, alpha=TRANSPARENCY_ALPHA_GRAPHS)
+                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.axis_origin[POINT_X]-DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE,0), (self.axis_origin[POINT_X]-DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE,self.image_height), color_ip=COLOR_ORANGE, alpha=TRANSPARENCY_ALPHA_GRAPHS)
+                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.axis_origin[POINT_X]+DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE,0), (self.axis_origin[POINT_X]+DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE,self.image_height), color_ip=COLOR_ORANGE, alpha=TRANSPARENCY_ALPHA_GRAPHS)
+                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.axis_origin[POINT_X]-DIST_FROM_CAMERA_CENTRE_TOO_FAR,0), (self.axis_origin[POINT_X]-DIST_FROM_CAMERA_CENTRE_TOO_FAR,self.image_height), color_ip=COLOR_RED, alpha=TRANSPARENCY_ALPHA_GRAPHS)
+                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.axis_origin[POINT_X]+DIST_FROM_CAMERA_CENTRE_TOO_FAR,0), (self.axis_origin[POINT_X]+DIST_FROM_CAMERA_CENTRE_TOO_FAR,self.image_height), color_ip=COLOR_RED, alpha=TRANSPARENCY_ALPHA_GRAPHS)
                      
                         self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (0,DIST_PERSON_CAMERA_TOBEKEPT_PIXEL), (self.image_width, DIST_PERSON_CAMERA_TOBEKEPT_PIXEL), color_ip=COLOR_YELLOW, alpha=TRANSPARENCY_ALPHA_GRAPHS + 0.2)
                        
@@ -571,13 +586,29 @@ class FollowMe_Go1():
                     print("Person moved back")
                     followme_cmd_vel.linear.x  = NEG_SIGN * LNR_VEL_X_MIN
                     self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'right' )
-            
-                # If centre_deviation is more, move forward | No moving forward when turning left
-                if(not(self.turn_deviation_flag == DIFF_CORRECTING and turn_deviation < 0)):
-                    if(centre_deviation > 0):
-                        print("Person moved front")
-                        followme_cmd_vel.linear.x  = POS_SIGN * LNR_VEL_X_MIN
-                        self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left' )
+
+
+
+                if(centre_deviation > 0):
+
+                    if(self.person_depth > DIST_FROM_CAMERA_CENTRE_TOO_FAR):
+                        print("Person moved too front")
+                        followme_cmd_vel.linear.x = POS_SIGN * LNR_VEL_X_TOO_FAR
+                        self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left', color_ip=COLOR_ORANGE )
+
+                    else:
+
+                        # # If centre_deviation is more, move forward | No moving forward when turning left at small forward deviations
+                        # if(not(self.turn_deviation_flag == DIFF_CORRECTING and turn_deviation < 0)
+                        # or abs(centre_deviation) >= DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE):
+                        
+                            print("Person moved front")
+
+                            speed_slope = (LNR_VEL_X_OK_MAX - LNR_VEL_X_OK_MIN)/(DIST_FROM_CAMERA_CENTRE_TOO_FAR - DIST_FROM_CAMERA_CENTRE_THRESHOLD)
+                            followme_cmd_vel.linear.x  = centre_deviation * speed_slope + LNR_VEL_X_OK_MIN
+                            print("Slope = " + str(speed_slope) + " Linear x speed = " + str(followme_cmd_vel.linear.x))
+
+                            self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left' )
 
 
                 ## Resetting of aligning to centre
@@ -599,20 +630,43 @@ class FollowMe_Go1():
 
             ## Only turn left/right if the debounce threshold is reached
             if(self.turn_deviation_flag == DIFF_CORRECTING):
+                
+                ## Too big turn
+                if(abs(turn_deviation) > TURN_FROM_AXIS_VERY_FAR ):
 
-                # If difference is less than threshold, turn left
-                if(turn_deviation < 0):
-                    print("Person turned left")
-                    ## Only turn left
-                    followme_cmd_vel.angular.z = POS_SIGN * ANG_VEL_Z_MIN                    
-                    self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'bottomleft' )
-            
-                # If more, turn rgiht
-                if(turn_deviation > 0):
-                    print("Person turned right")
-                    ## Only turn right
-                    followme_cmd_vel.angular.z = NEG_SIGN * ANG_VEL_Z_MIN                    
-                    self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'topleft' )
+                    # If difference is less than threshold, turn left
+                    if(turn_deviation < 0):
+                        print("Person turned too left")
+                        ## Only turn left
+                        followme_cmd_vel.angular.z = POS_SIGN * ANG_VEL_Z_TOO_FAR                    
+                        self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'bottomleft', color_ip=COLOR_ORANGE )
+                
+                    # If more, turn rgiht
+                    if(turn_deviation > 0):
+                        print("Person turned too right")
+                        ## Only turn right
+                        followme_cmd_vel.angular.z = NEG_SIGN * ANG_VEL_Z_TOO_FAR                    
+                        self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'topleft', color_ip=COLOR_ORANGE )
+
+                else:
+                    ## Calculate the velocity
+                    ang_vel_slope = (ANG_VEL_Z_OK_MAX - ANG_VEL_Z_OK_MIN)/(TURN_FROM_AXIS_VERY_FAR - TURN_FROM_AXIS_THRESHOLD)
+                    ang_vel_temp = turn_deviation * ang_vel_slope + ANG_VEL_Z_OK_MIN
+                    print("Angular Vel Slope = " + str(ang_vel_slope) + " Angular z speed = " + str(ang_vel_temp))
+
+                    # If difference is less than threshold, turn left
+                    if(turn_deviation < 0):
+                        print("Person turned left")
+                        ## Only turn left
+                        followme_cmd_vel.angular.z = POS_SIGN * ang_vel_temp                    
+                        self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'bottomleft' )
+                
+                    # If more, turn rgiht
+                    if(turn_deviation > 0):
+                        print("Person turned right")
+                        ## Only turn right
+                        followme_cmd_vel.angular.z = NEG_SIGN * ang_vel_temp                    
+                        self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'topleft' )
 
 
                 ## Resetting of aligning to centre
