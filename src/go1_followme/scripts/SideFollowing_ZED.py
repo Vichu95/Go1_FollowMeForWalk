@@ -508,7 +508,7 @@ class FollowMe_Go1():
             else:
                 self.depth_diff_cntr = 0
 
-            print("Depth Flag : ", self.depth_diff_flag, " Depth Difference : ", depth_diff, " Counter : ",self.depth_diff_cntr)
+            print("Depth Flag : ", self.depth_diff_flag, " Depth Difference : ", depth_diff, " Depth Difference Counter : ",self.depth_diff_cntr)
 
 
             #####
@@ -529,7 +529,7 @@ class FollowMe_Go1():
             else:
                 self.centre_deviation_cntr = 0
 
-            print("Centre Deviation Flag : ", self.centre_deviation_flag, " Centre Deviation : ", centre_deviation, " Counter : ",self.centre_deviation_cntr)
+            print("Centre Deviation Flag : ", self.centre_deviation_flag, " Centre Deviation : ", centre_deviation, " Centre Deviation Counter : ",self.centre_deviation_cntr)
 
 
             #####
@@ -553,6 +553,7 @@ class FollowMe_Go1():
                or centre_deviation < 0):
                 print("Skipping turn deviation check")
                 check_turn_deviation = False
+                self.turn_deviation_flag = DIFF_MAINTAINED
             
             # Angle is positive for forward right and negative for forward left
             if((abs(turn_deviation) > TURN_FROM_AXIS_THRESHOLD)
@@ -568,7 +569,7 @@ class FollowMe_Go1():
             else:
                 self.turn_deviation_cntr = 0
 
-            print("Turn Deviation Flag : ", self.turn_deviation_flag, " Turn Deviation : ", turn_deviation, " Counter : ",self.turn_deviation_cntr)
+            print("Turn Deviation Flag : ", self.turn_deviation_flag, " Turn Deviation : ", turn_deviation, " Turn Deviation Counter : ",self.turn_deviation_cntr)
 
 
 
@@ -651,7 +652,7 @@ class FollowMe_Go1():
                 else:
                     ## Calculate the velocity
                     ang_vel_slope = (ANG_VEL_Z_OK_MAX - ANG_VEL_Z_OK_MIN)/(TURN_FROM_AXIS_VERY_FAR - TURN_FROM_AXIS_THRESHOLD)
-                    ang_vel_temp = turn_deviation * ang_vel_slope + ANG_VEL_Z_OK_MIN
+                    ang_vel_temp = abs(turn_deviation) * ang_vel_slope + ANG_VEL_Z_OK_MIN
                     print("Angular Vel Slope = " + str(ang_vel_slope) + " Angular z speed = " + str(ang_vel_temp))
 
                     # If difference is less than threshold, turn left
@@ -705,6 +706,8 @@ class FollowMe_Go1():
                         followme_cmd_vel.linear.y = POS_SIGN * LNR_VEL_Y_MIN
                         self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'down' )
 
+                else:
+                    print("Skipping depth deviation correction")
 
 
                 ## Resetting of aligning to centre
