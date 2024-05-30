@@ -553,7 +553,7 @@ class FollowMe_Go1():
             # - Skip check when person is at centre
             # - Skip turning for now when person moves back
             check_turn_deviation = True
-            if((abs(centre_deviation) > DIST_FROM_CAMERA_CENTRE_THRESHOLD)
+            if((abs(centre_deviation) <= DIST_FROM_CAMERA_CENTRE_THRESHOLD)
                or centre_deviation < 0):
                 print("Skipping turn deviation check")
                 check_turn_deviation = False
@@ -794,7 +794,7 @@ class FollowMe_Go1():
         # No angular when there is lienar y
         if(followme_cmd_vel.linear.y != 0.0):
             followme_cmd_vel.angular.z = 0.0
-            print("Reseting angular velocity to zero")
+            print("Safe : Reseting angular velocity to zero")
 
         self.followme_cmdvel_pub.publish(followme_cmd_vel)        
 
