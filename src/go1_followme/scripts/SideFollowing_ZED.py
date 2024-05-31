@@ -605,7 +605,9 @@ class FollowMe_Go1():
                     else:
 
                         # If centre_deviation is more, move forward | No moving forward when turning left at small forward deviations
-                        if(not(self.turn_deviation_flag == DIFF_CORRECTING and turn_deviation < 0)):
+                        if(not(self.turn_deviation_flag == DIFF_CORRECTING and turn_deviation < 0
+                            and self.person_depth < 60)
+                           ):
                         # or abs(centre_deviation) >= DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE):
                         
                             print("Person moved front")
