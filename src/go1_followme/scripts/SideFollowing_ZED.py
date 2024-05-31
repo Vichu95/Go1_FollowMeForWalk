@@ -616,9 +616,6 @@ class FollowMe_Go1():
 
                             self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left' )
 
-                            if(depth_diff < 0):
-                                followme_cmd_vel.linear.x  = LNR_VEL_X_MIN
-                                print("Keeping linear x as low value when person moved left")
 
                     print("Previous speed x",  self.prev_cmd_vel_linear_x)
                     ## Ramping up of cmd_vel to avoid sudden high values above min value
