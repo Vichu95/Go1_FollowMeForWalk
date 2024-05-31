@@ -550,10 +550,10 @@ class FollowMe_Go1():
             
 
             ## Is turn deviations needed to checked?
-            # - Skip check when person is at centre
+            # - Skip check when person is at centre, except when correcting
             # - Skip turning for now when person moves back
             check_turn_deviation = True
-            if((abs(centre_deviation) <= DIST_FROM_CAMERA_CENTRE_THRESHOLD)
+            if(((abs(centre_deviation) <= DIST_FROM_CAMERA_CENTRE_THRESHOLD) and self.turn_deviation_flag != DIFF_CORRECTING)
                or centre_deviation < 0):
                 print("Skipping turn deviation check")
                 check_turn_deviation = False
@@ -605,8 +605,8 @@ class FollowMe_Go1():
                     else:
 
                         # If centre_deviation is more, move forward | No moving forward when turning left at small forward deviations
-                        if(not(self.turn_deviation_flag == DIFF_CORRECTING and turn_deviation < 0)
-                        or abs(centre_deviation) >= DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE):
+                        if(not(self.turn_deviation_flag == DIFF_CORRECTING and turn_deviation < 0)):
+                        # or abs(centre_deviation) >= DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE):
                         
                             print("Person moved front")
 
@@ -616,15 +616,19 @@ class FollowMe_Go1():
 
                             self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left' )
 
+                            if(depth_diff < 0):
+                                followme_cmd_vel.linear.x  = LNR_VEL_X_MIN
+                                print("Keeping linear x as low value when person moved left")
+
                     print("Previous speed x",  self.prev_cmd_vel_linear_x)
                     ## Ramping up of cmd_vel to avoid sudden high values above min value
                     if(followme_cmd_vel.linear.x - self.prev_cmd_vel_linear_x > LNR_VEL_X_POS_STEP ):
                         # Increment with step size
                         followme_cmd_vel.linear.x = self.prev_cmd_vel_linear_x + LNR_VEL_X_POS_STEP                        
                         print("Ramping up the linear x by ", LNR_VEL_X_POS_STEP, " and is now ", followme_cmd_vel.linear.x )
-                    if(followme_cmd_vel.linear.x < LNR_VEL_X_OK_MIN):
-                        followme_cmd_vel.linear.x = LNR_VEL_X_OK_MIN
-                        print("Keeping the linear x at minimum configured velocity")
+                        if(followme_cmd_vel.linear.x < LNR_VEL_X_OK_MIN):
+                            followme_cmd_vel.linear.x = LNR_VEL_X_OK_MIN
+                            print("Keeping the linear x at minimum configured velocity")
 
 
                 ## Resetting of aligning to centre
