@@ -115,14 +115,14 @@ LNR_VEL_Y_MIN = 0.15
 
 LNR_VEL_X_MIN = 0.15
 LNR_VEL_X_OK_MIN = 0.111
-LNR_VEL_X_OK_MAX = 0.4
+LNR_VEL_X_OK_MAX = 0.7
 LNR_VEL_X_TOO_FAR = 0.5
 LNR_VEL_X_POS_STEP = 0.05
 
 ANG_VEL_Z_MIN = 0.3
 ANG_VEL_Z_OK_MIN = 0.3
-ANG_VEL_Z_OK_MAX = 0.6
-ANG_VEL_Z_TOO_FAR = 0.7
+ANG_VEL_Z_OK_MAX = 0.8
+ANG_VEL_Z_TOO_FAR = 0.9
 
 ################################################################
 ##############    C L A S S E S
