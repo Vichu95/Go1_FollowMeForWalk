@@ -454,21 +454,19 @@ class FollowMe_Go1():
         # Check if human is detected
         if(self.person_detected):
                 
-                    
-            # Check if the human is almost at the centre
+            # Check if they are close to centre and robot
+            if((abs(self.axis_origin[POINT_X] - self.BB_MIDDLE_BOTTOM_LINE[POINT_X]) < DIST_FROM_CAMERA_CENTRE_THRESHOLD)
+               and abs(self.person_depth) < DIST_PERSON_CAMERA_VERY_FAR):
+                # If yes, change the state to following
+                self.state = 'FOLLOWING'
+                print("Its near")
 
-                # Check if they are close
-                if(abs(self.axis_origin[POINT_X] - self.BB_MIDDLE_BOTTOM_LINE[POINT_X]) < DIST_FROM_CAMERA_CENTRE_THRESHOLD) :
-                    # If yes, change the state to following
-                    self.state = 'FOLLOWING'
-                    print("Its near")
+                cv2.waitKey(5)
+            
+            else:
+                print("Not near the robot centre")
+                self.camera_raw_op = addOpenCVTextAtCentre(self.camera_raw_op, "MOVE CLOSER TO CENTRE", color_ip=COLOR_RED)
 
-                    cv2.waitKey(5)
-                
-                else:
-                    print("Not near the centre")
-                    self.camera_raw_op = addOpenCVTextAtCentre(self.camera_raw_op, "MOVE CLOSER TO CENTRE", color_ip=COLOR_RED)
-        
         else:
             print("Person not detected...")
 
