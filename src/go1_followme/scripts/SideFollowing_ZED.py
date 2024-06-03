@@ -51,6 +51,7 @@ DIST_PERSON_CAMERA_DIFF_THRESHOLD = 10
 DIST_PERSON_CAMERA_VERY_FAR = 130
 DIST_PERSON_CAMERA_TOO_CLOSE = 50
 DIST_PERSON_CAMERA_NO_MOVE_LEFTTURN = 60
+DIST_PERSON_CAMERA_INIT_HIGH_VALUE = 300
 
 DIST_FROM_CAMERA_CENTRE_TOO_FAR = (int(ZED_IMAGE_WIDTH * 0.34))
 DIST_FROM_CAMERA_CENTRE_THRESHOLD = (int(ZED_IMAGE_WIDTH * 0.1))
@@ -192,7 +193,7 @@ class FollowMe_Go1():
         ######
 
 
-        self.person_depth = DIST_PERSON_CAMERA_TOBEKEPT
+        self.person_depth = DIST_PERSON_CAMERA_INIT_HIGH_VALUE
 
         self.image_height = self.zed.get_camera_information().camera_resolution.height
         self.image_width = self.zed.get_camera_information().camera_resolution.width
