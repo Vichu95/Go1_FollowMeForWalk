@@ -50,6 +50,7 @@ DIST_PERSON_CAMERA_VALID_THRESHOLD = 5
 DIST_PERSON_CAMERA_DIFF_THRESHOLD = 10
 DIST_PERSON_CAMERA_VERY_FAR = 130
 DIST_PERSON_CAMERA_TOO_CLOSE = 50
+DIST_PERSON_CAMERA_NO_MOVE_LEFTTURN = 60
 
 DIST_FROM_CAMERA_CENTRE_TOO_FAR = (int(ZED_IMAGE_WIDTH * 0.34))
 DIST_FROM_CAMERA_CENTRE_THRESHOLD = (int(ZED_IMAGE_WIDTH * 0.1))
@@ -604,12 +605,9 @@ class FollowMe_Go1():
 
                     else:
 
-                        # If centre_deviation is more, move forward | No moving forward when turning left at small forward deviations
+                        # Only if its not 'turn left correcting and depth is low region'
                         if(not(self.turn_deviation_flag == DIFF_CORRECTING and turn_deviation < 0
-                            and self.person_depth < 60)
-                           ):
-                        # or abs(centre_deviation) >= DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE):
-                        
+                            and self.person_depth < DIST_PERSON_CAMERA_NO_MOVE_LEFTTURN)):                        
                             print("Person moved front")
 
                             speed_slope = (LNR_VEL_X_OK_MAX - LNR_VEL_X_OK_MIN)/(DIST_FROM_CAMERA_CENTRE_TOO_FAR - DIST_FROM_CAMERA_CENTRE_NEAR)
