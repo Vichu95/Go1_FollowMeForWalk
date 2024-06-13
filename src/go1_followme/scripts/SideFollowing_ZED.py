@@ -54,7 +54,7 @@ DIST_PERSON_CAMERA_NO_MOVE_LEFTTURN = 60
 DIST_PERSON_CAMERA_INIT_HIGH_VALUE = 300
 
 DIST_FROM_CAMERA_CENTRE_TOO_FAR = (int(ZED_IMAGE_WIDTH * 0.34))
-DIST_FROM_CAMERA_CENTRE_THRESHOLD = (int(ZED_IMAGE_WIDTH * 0.1))
+DIST_FROM_CAMERA_CENTRE_THRESHOLD = (int(ZED_IMAGE_WIDTH * 0.075))
 DIST_FROM_CAMERA_CENTRE_NEAR = (int(ZED_IMAGE_WIDTH * 0.03125))
 DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE = (int(ZED_IMAGE_WIDTH * 0.25))
 
@@ -223,7 +223,7 @@ class FollowMe_Go1():
         self.turn_deviation_flag = DIFF_MAINTAINED
         self.turn_deviation_cntr = 0
         
-        self.axis_origin = (int(self.image_width/2), DIST_PERSON_CAMERA_TOBEKEPT_PIXEL)
+        self.axis_origin = (int(self.image_width/2 + self.image_width/5 ), DIST_PERSON_CAMERA_TOBEKEPT_PIXEL)
         self.prev_cmd_vel_linear_x = 0.0
         
         ## CALIBRATION
