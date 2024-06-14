@@ -50,7 +50,7 @@ DIST_PERSON_CAMERA_VALID_THRESHOLD = 5
 DIST_PERSON_CAMERA_DIFF_THRESHOLD = 10
 DIST_PERSON_CAMERA_VERY_FAR = 130
 DIST_PERSON_CAMERA_TOO_CLOSE = 50
-DIST_PERSON_CAMERA_NO_MOVE_LEFTTURN = 60
+DIST_PERSON_CAMERA_NO_MOVE_LEFTTURN = 60 #todo remove
 DIST_PERSON_CAMERA_INIT_HIGH_VALUE = 300
 
 DIST_FROM_CAMERA_CENTRE_TOO_FAR = (int(ZED_IMAGE_WIDTH * 0.5))
@@ -59,7 +59,7 @@ DIST_FROM_CAMERA_CENTRE_NEAR = (int(ZED_IMAGE_WIDTH * 0.03125))
 DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE = (int(ZED_IMAGE_WIDTH * 0.3))
 DIST_FROM_CAMERA_CENTRE_TO_CALC_TURN = (int(ZED_IMAGE_WIDTH * 0.50))
 
-TURN_FROM_AXIS_THRESHOLD = math.radians(10)
+TURN_FROM_AXIS_THRESHOLD = math.radians(8)
 TURN_FROM_AXIS_VERY_FAR = math.radians(25)
 TURN_FROM_AXIS_NEAR = math.radians(5)
 
@@ -118,7 +118,13 @@ LNR_VEL_Y_MIN = 0.15
 
 LNR_VEL_X_MIN = 0.15
 LNR_VEL_X_OK_MIN = 0.25
-LNR_VEL_X_OK_MAX = 0.5
+LNR_VEL_X_OK_MAX = 0.5 #todo
+LNR_VEL_X_ONLY_STRAIGHT_OK_MIN = 0.25
+LNR_VEL_X_ONLY_STRAIGHT_OK_MAX = 0.8
+LNR_VEL_X_STRAIGHT_RIGHT_OK_MIN = 0.32
+LNR_VEL_X_STRAIGHT_RIGHT_OK_MAX = 1.0
+LNR_VEL_X_LEFT_OK_MIN = 0.15
+LNR_VEL_X_LEFT_OK_MAX = 0.3
 LNR_VEL_X_TOO_FAR = 0.5
 LNR_VEL_X_POS_STEP = 0.05
 
@@ -586,7 +592,8 @@ class FollowMe_Go1():
             #####
 
             ## Handling edges at left turn. Between DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE and centre, if depth is too less, do only depth
-            ## Outside DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE, priority for turn only
+            ## Outside DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE and camera edge, priority for turn only
+            ## Between DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE and axis, do small linear and turn. Only do depth if depth low as point 1
 
             ## Only move left/right if the debounce threshold is reached
             if(self.centre_deviation_flag == DIFF_CORRECTING):                    
@@ -608,14 +615,43 @@ class FollowMe_Go1():
 
                     else:
 
-                        # Only if its not 'turn left correcting and depth is low region'
-                        if(not(self.turn_deviation_flag == DIFF_CORRECTING and turn_deviation < 0
-                            and self.person_depth < DIST_PERSON_CAMERA_NO_MOVE_LEFTTURN)):                        
+                        ## Case 1 : Only straight
+                        if(self.turn_deviation_flag != DIFF_CORRECTING):             
                             print("Person moved front")
+                            speed_slope = (LNR_VEL_X_ONLY_STRAIGHT_OK_MAX - LNR_VEL_X_ONLY_STRAIGHT_OK_MIN)/(DIST_FROM_CAMERA_CENTRE_TOO_FAR - DIST_FROM_CAMERA_CENTRE_NEAR)
+                            followme_cmd_vel.linear.x  = abs(centre_deviation - DIST_FROM_CAMERA_CENTRE_NEAR) * speed_slope + LNR_VEL_X_ONLY_STRAIGHT_OK_MIN
+                            print("Slope = " + str(speed_slope) + " Linear x speed [only straight] = " + str(followme_cmd_vel.linear.x))
 
-                            speed_slope = (LNR_VEL_X_OK_MAX - LNR_VEL_X_OK_MIN)/(DIST_FROM_CAMERA_CENTRE_TOO_FAR - DIST_FROM_CAMERA_CENTRE_NEAR)
-                            followme_cmd_vel.linear.x  = abs(centre_deviation - DIST_FROM_CAMERA_CENTRE_NEAR) * speed_slope + LNR_VEL_X_OK_MIN
-                            print("Slope = " + str(speed_slope) + " Linear x speed = " + str(followme_cmd_vel.linear.x))
+                            self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left' )
+
+
+
+                        ## Case 2 : Straight and right turn
+                        # Turn with more speed in linear
+                        if(self.turn_deviation_flag == DIFF_CORRECTING and turn_deviation > 0):             
+                            print("Person moved front right")
+                            speed_slope = (LNR_VEL_X_STRAIGHT_RIGHT_OK_MAX - LNR_VEL_X_STRAIGHT_RIGHT_OK_MIN)/(DIST_FROM_CAMERA_CENTRE_TOO_FAR - DIST_FROM_CAMERA_CENTRE_NEAR)
+                            followme_cmd_vel.linear.x  = abs(centre_deviation - DIST_FROM_CAMERA_CENTRE_NEAR) * speed_slope + LNR_VEL_X_STRAIGHT_RIGHT_OK_MIN
+                            print("Slope = " + str(speed_slope) + " Linear x speed [straight + right] = " + str(followme_cmd_vel.linear.x))
+
+                            self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left' )
+
+
+
+
+                        ## Case 3 : Straight and left turn
+
+                            # Only if its not 'turn left correcting and depth is low region'
+
+                            # No linear x bw DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE and camera edge
+                            # Very low speed in other region close to axis
+                        if((self.turn_deviation_flag == DIFF_CORRECTING and turn_deviation < 0)
+                            and  abs(centre_deviation) > DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE ):                        
+                            print("Person moved front left")
+
+                            speed_slope = (LNR_VEL_X_LEFT_OK_MAX - LNR_VEL_X_LEFT_OK_MIN)/(DIST_FROM_CAMERA_CENTRE_TOO_FAR - DIST_FROM_CAMERA_CENTRE_NEAR)
+                            followme_cmd_vel.linear.x  = abs(centre_deviation - DIST_FROM_CAMERA_CENTRE_NEAR) * speed_slope + LNR_VEL_X_LEFT_OK_MIN
+                            print("Slope = " + str(speed_slope) + " Linear x speed [straight + left] = " + str(followme_cmd_vel.linear.x))
 
                             self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left' )
 
