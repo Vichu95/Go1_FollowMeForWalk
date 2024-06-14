@@ -225,6 +225,7 @@ class FollowMe_Go1():
         
         self.axis_origin = (int(self.image_width/2 + self.image_width/5 ), DIST_PERSON_CAMERA_TOBEKEPT_PIXEL)
         self.prev_cmd_vel_linear_x = 0.0
+        self.prev_cmd_vel_angular_z = 0.0
         
         ## CALIBRATION
         self.depth_pixel_ratio_array = [ZED_RATIO_DEPTH_PIXEL] #todo
@@ -677,12 +678,40 @@ class FollowMe_Go1():
                         followme_cmd_vel.angular.z = POS_SIGN * ang_vel_temp                    
                         self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'bottomleft' )
                 
-                    # If more, turn rgiht
+                    # If more, turn right
                     if(turn_deviation > 0):
                         print("Person turned right")
                         ## Only turn right
                         followme_cmd_vel.angular.z = NEG_SIGN * ang_vel_temp                    
                         self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'topleft' )
+
+
+
+                print("Previous angular speed z",  self.prev_cmd_vel_angular_z)
+                ## Ramping up of cmd_vel to avoid sudden high values above min value
+                
+                # Turning left
+                if(turn_deviation < 0):
+
+                    if(followme_cmd_vel.angular.z - self.prev_cmd_vel_angular_z > ANG_VEL_Z_POS_STEP ):
+                        # Increment with step size
+                        followme_cmd_vel.angular.z = self.prev_cmd_vel_angular_z + ANG_VEL_Z_POS_STEP                        
+                        print("Ramping up the angular z by ", ANG_VEL_Z_POS_STEP, " and is now ", followme_cmd_vel.angular.z )
+                        if(followme_cmd_vel.angular.z < ANG_VEL_Z_MIN):
+                            followme_cmd_vel.angular.z = ANG_VEL_Z_MIN
+                            print("Keeping the angular z at minimum configured velocity of ", followme_cmd_vel.angular.z)
+                    
+                # Turning right
+                if(turn_deviation > 0):
+
+                    if(followme_cmd_vel.angular.z - self.prev_cmd_vel_angular_z < (NEG_SIGN * ANG_VEL_Z_POS_STEP) ):
+                        # Increment with step size
+                        followme_cmd_vel.angular.z = self.prev_cmd_vel_angular_z - ANG_VEL_Z_POS_STEP                        
+                        print("Ramping down the angular z by ", ANG_VEL_Z_POS_STEP, " and is now ", followme_cmd_vel.angular.z )
+                        if(followme_cmd_vel.angular.z > (NEG_SIGN * ANG_VEL_Z_MIN)):
+                            followme_cmd_vel.angular.z = NEG_SIGN * ANG_VEL_Z_MIN
+                            print("Keeping the angular z at minimum configured velocity of ", followme_cmd_vel.angular.z)
+
 
 
                 ## Resetting of aligning to centre
@@ -787,6 +816,7 @@ class FollowMe_Go1():
         # Control and Safety checks for final published cmd vel
 
         self.prev_cmd_vel_linear_x =  followme_cmd_vel.linear.x
+        self.prev_cmd_vel_angular_z = followme_cmd_vel.angular.z
 
         # Set zeroes to all unused variables
         followme_cmd_vel.linear.z = 0.0
