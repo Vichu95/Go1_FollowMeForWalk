@@ -57,10 +57,11 @@ DIST_FROM_CAMERA_CENTRE_TOO_FAR = (int(ZED_IMAGE_WIDTH * 0.34))
 DIST_FROM_CAMERA_CENTRE_THRESHOLD = (int(ZED_IMAGE_WIDTH * 0.075))
 DIST_FROM_CAMERA_CENTRE_NEAR = (int(ZED_IMAGE_WIDTH * 0.03125))
 DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE = (int(ZED_IMAGE_WIDTH * 0.25))
+DIST_FROM_CAMERA_CENTRE_TO_CALC_TURN = (int(ZED_IMAGE_WIDTH * 0.25))
 
-TURN_FROM_AXIS_THRESHOLD = math.radians(3)
-TURN_FROM_AXIS_VERY_FAR = math.radians(40)
-TURN_FROM_AXIS_NEAR = math.radians(1)
+TURN_FROM_AXIS_THRESHOLD = math.radians(8)
+TURN_FROM_AXIS_VERY_FAR = math.radians(20)
+TURN_FROM_AXIS_NEAR = math.radians(3)
 
 POINT_X= 0
 POINT_Y = 1
@@ -121,10 +122,11 @@ LNR_VEL_X_OK_MAX = 0.7
 LNR_VEL_X_TOO_FAR = 0.5
 LNR_VEL_X_POS_STEP = 0.05
 
-ANG_VEL_Z_MIN = 0.3
+ANG_VEL_Z_MIN = 0.15
 ANG_VEL_Z_OK_MIN = 0.5
 ANG_VEL_Z_OK_MAX = 0.8
 ANG_VEL_Z_TOO_FAR = 0.9
+ANG_VEL_Z_POS_STEP = 0.15
 
 ################################################################
 ##############    C L A S S E S
@@ -543,7 +545,7 @@ class FollowMe_Go1():
 
             
             ## Calculate angle of turn : Angle made by line from person to axis origin
-            slope_of_personDetected_withAxis = (self.BB_MIDDLE_BOTTOM_LINE[POINT_Y] - self.axis_origin[POINT_Y])/(self.BB_MIDDLE_BOTTOM_LINE[POINT_X] - self.axis_origin[POINT_X])
+            slope_of_personDetected_withAxis = (self.BB_MIDDLE_BOTTOM_LINE[POINT_Y] - self.axis_origin[POINT_Y])/(DIST_FROM_CAMERA_CENTRE_TO_CALC_TURN - self.axis_origin[POINT_X])
             turn_deviation = math.atan(slope_of_personDetected_withAxis)
             angle_theta = math.degrees(turn_deviation)
             print("Angle is :", angle_theta, " Radians ", turn_deviation)
