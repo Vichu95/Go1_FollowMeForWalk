@@ -53,15 +53,15 @@ DIST_PERSON_CAMERA_TOO_CLOSE = 50
 DIST_PERSON_CAMERA_NO_MOVE_LEFTTURN = 60
 DIST_PERSON_CAMERA_INIT_HIGH_VALUE = 300
 
-DIST_FROM_CAMERA_CENTRE_TOO_FAR = (int(ZED_IMAGE_WIDTH * 0.34))
+DIST_FROM_CAMERA_CENTRE_TOO_FAR = (int(ZED_IMAGE_WIDTH * 0.5))
 DIST_FROM_CAMERA_CENTRE_THRESHOLD = (int(ZED_IMAGE_WIDTH * 0.075))
 DIST_FROM_CAMERA_CENTRE_NEAR = (int(ZED_IMAGE_WIDTH * 0.03125))
-DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE = (int(ZED_IMAGE_WIDTH * 0.25))
-DIST_FROM_CAMERA_CENTRE_TO_CALC_TURN = (int(ZED_IMAGE_WIDTH * 0.25))
+DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE = (int(ZED_IMAGE_WIDTH * 0.3))
+DIST_FROM_CAMERA_CENTRE_TO_CALC_TURN = (int(ZED_IMAGE_WIDTH * 0.50))
 
-TURN_FROM_AXIS_THRESHOLD = math.radians(8)
-TURN_FROM_AXIS_VERY_FAR = math.radians(20)
-TURN_FROM_AXIS_NEAR = math.radians(3)
+TURN_FROM_AXIS_THRESHOLD = math.radians(10)
+TURN_FROM_AXIS_VERY_FAR = math.radians(25)
+TURN_FROM_AXIS_NEAR = math.radians(5)
 
 POINT_X= 0
 POINT_Y = 1
@@ -117,8 +117,8 @@ POS_IMAGE_BOTTOM_RIGHT_ARROW = [500,250]
 LNR_VEL_Y_MIN = 0.15
 
 LNR_VEL_X_MIN = 0.15
-LNR_VEL_X_OK_MIN = 0.25
-LNR_VEL_X_OK_MAX = 0.7
+LNR_VEL_X_OK_MIN = 0.20
+LNR_VEL_X_OK_MAX = 0.5
 LNR_VEL_X_TOO_FAR = 0.5
 LNR_VEL_X_POS_STEP = 0.05
 
@@ -225,7 +225,7 @@ class FollowMe_Go1():
         self.turn_deviation_flag = DIFF_MAINTAINED
         self.turn_deviation_cntr = 0
         
-        self.axis_origin = (int(self.image_width/2 + self.image_width/5 ), DIST_PERSON_CAMERA_TOBEKEPT_PIXEL)
+        self.axis_origin = (int(self.image_width/2 + self.image_width/6 ), DIST_PERSON_CAMERA_TOBEKEPT_PIXEL)
         self.prev_cmd_vel_linear_x = 0.0
         self.prev_cmd_vel_angular_z = 0.0
         
@@ -395,10 +395,11 @@ class FollowMe_Go1():
                         self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.axis_origin[POINT_X]-DIST_FROM_CAMERA_CENTRE_THRESHOLD,0), (self.axis_origin[POINT_X]-DIST_FROM_CAMERA_CENTRE_THRESHOLD,self.image_height), color_ip=COLOR_YELLOW, alpha=TRANSPARENCY_ALPHA_GRAPHS)
                         self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.axis_origin[POINT_X]+DIST_FROM_CAMERA_CENTRE_THRESHOLD,0), (self.axis_origin[POINT_X]+DIST_FROM_CAMERA_CENTRE_THRESHOLD,self.image_height), color_ip=COLOR_YELLOW, alpha=TRANSPARENCY_ALPHA_GRAPHS)
                         self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.axis_origin[POINT_X]-DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE,0), (self.axis_origin[POINT_X]-DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE,self.image_height), color_ip=COLOR_ORANGE, alpha=TRANSPARENCY_ALPHA_GRAPHS)
-                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.axis_origin[POINT_X]+DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE,0), (self.axis_origin[POINT_X]+DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE,self.image_height), color_ip=COLOR_ORANGE, alpha=TRANSPARENCY_ALPHA_GRAPHS)
+                        # self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.axis_origin[POINT_X]+DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE,0), (self.axis_origin[POINT_X]+DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE,self.image_height), color_ip=COLOR_ORANGE, alpha=TRANSPARENCY_ALPHA_GRAPHS)
                         self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.axis_origin[POINT_X]-DIST_FROM_CAMERA_CENTRE_TOO_FAR,0), (self.axis_origin[POINT_X]-DIST_FROM_CAMERA_CENTRE_TOO_FAR,self.image_height), color_ip=COLOR_RED, alpha=TRANSPARENCY_ALPHA_GRAPHS)
-                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.axis_origin[POINT_X]+DIST_FROM_CAMERA_CENTRE_TOO_FAR,0), (self.axis_origin[POINT_X]+DIST_FROM_CAMERA_CENTRE_TOO_FAR,self.image_height), color_ip=COLOR_RED, alpha=TRANSPARENCY_ALPHA_GRAPHS)
-                     
+                        # self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.axis_origin[POINT_X]+DIST_FROM_CAMERA_CENTRE_TOO_FAR,0), (self.axis_origin[POINT_X]+DIST_FROM_CAMERA_CENTRE_TOO_FAR,self.image_height), color_ip=COLOR_RED, alpha=TRANSPARENCY_ALPHA_GRAPHS)
+
+
                         self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (0,DIST_PERSON_CAMERA_TOBEKEPT_PIXEL), (self.image_width, DIST_PERSON_CAMERA_TOBEKEPT_PIXEL), color_ip=COLOR_YELLOW, alpha=TRANSPARENCY_ALPHA_GRAPHS + 0.2)
                        
 
@@ -669,8 +670,8 @@ class FollowMe_Go1():
 
                 else:
                     ## Calculate the velocity
-                    ang_vel_slope = (ANG_VEL_Z_OK_MAX - ANG_VEL_Z_OK_MIN)/(TURN_FROM_AXIS_VERY_FAR - TURN_FROM_AXIS_THRESHOLD)
-                    ang_vel_temp = abs(turn_deviation) * ang_vel_slope + ANG_VEL_Z_OK_MIN
+                    ang_vel_slope = (ANG_VEL_Z_OK_MAX - ANG_VEL_Z_OK_MIN)/(TURN_FROM_AXIS_VERY_FAR - TURN_FROM_AXIS_NEAR)
+                    ang_vel_temp = (abs(turn_deviation) - TURN_FROM_AXIS_NEAR) * ang_vel_slope + ANG_VEL_Z_OK_MIN
                     print("Angular Vel Slope = " + str(ang_vel_slope) + " Angular z speed = " + str(ang_vel_temp))
 
                     # If difference is less than threshold, turn left
