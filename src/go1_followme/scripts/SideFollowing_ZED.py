@@ -393,7 +393,7 @@ class FollowMe_Go1():
 
 
                         # Draw thresholds
-                        # self.calibrating()
+                        self.calibrating()
 
                         # Calculate centre point of camera and draw the lines for reference
                         print("Camera centre : ",self.image_vertical_centre_xpoint, "Axis :", self.axis_origin)
@@ -406,8 +406,11 @@ class FollowMe_Go1():
                         # self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.axis_origin[POINT_X]+DIST_FROM_CAMERA_CENTRE_TOO_FAR,0), (self.axis_origin[POINT_X]+DIST_FROM_CAMERA_CENTRE_TOO_FAR,self.image_height), color_ip=COLOR_RED, alpha=TRANSPARENCY_ALPHA_GRAPHS)
 
 
-                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (0,DIST_PERSON_CAMERA_TOBEKEPT_PIXEL), (self.image_width, DIST_PERSON_CAMERA_TOBEKEPT_PIXEL), color_ip=COLOR_YELLOW, alpha=TRANSPARENCY_ALPHA_GRAPHS + 0.2)
+                        # self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (0,DIST_PERSON_CAMERA_TOBEKEPT_PIXEL), (self.image_width, DIST_PERSON_CAMERA_TOBEKEPT_PIXEL), color_ip=COLOR_YELLOW, alpha=TRANSPARENCY_ALPHA_GRAPHS + 0.2)
+                        
+                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (0,int(DIST_PERSON_CAMERA_TOBEKEPT/self.depth_pixel_ratio_mean)), (self.image_width, int(DIST_PERSON_CAMERA_TOBEKEPT/self.depth_pixel_ratio_mean)), color_ip=COLOR_YELLOW, alpha=TRANSPARENCY_ALPHA_GRAPHS + 0.2)
                        
+
 
                         # Calculate centre point of the detected person
                         print("Person centre : ",self.BB_MIDDLE_BOTTOM_LINE[POINT_X])
@@ -552,7 +555,8 @@ class FollowMe_Go1():
 
             
             ## Calculate angle of turn : Angle made by line from person to axis origin
-            slope_of_personDetected_withAxis = (self.BB_MIDDLE_BOTTOM_LINE[POINT_Y] - self.axis_origin[POINT_Y])/(DIST_FROM_CAMERA_CENTRE_TO_CALC_TURN - self.axis_origin[POINT_X])
+            # slope_of_personDetected_withAxis = (self.BB_MIDDLE_BOTTOM_LINE[POINT_Y] - self.axis_origin[POINT_Y])/(DIST_FROM_CAMERA_CENTRE_TO_CALC_TURN - self.axis_origin[POINT_X])
+            slope_of_personDetected_withAxis = (self.BB_MIDDLE_BOTTOM_LINE[POINT_Y] - int(DIST_PERSON_CAMERA_TOBEKEPT/self.depth_pixel_ratio_mean))/(DIST_FROM_CAMERA_CENTRE_TO_CALC_TURN - self.axis_origin[POINT_X])
             turn_deviation = math.atan(slope_of_personDetected_withAxis)
             angle_theta = math.degrees(turn_deviation)
             print("Angle is :", angle_theta, " Radians ", turn_deviation)
