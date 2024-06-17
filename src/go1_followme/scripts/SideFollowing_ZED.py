@@ -60,7 +60,8 @@ DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE = (int(ZED_IMAGE_WIDTH * 0.3))
 DIST_FROM_CAMERA_CENTRE_TO_CALC_TURN_ANGLE = (int(ZED_IMAGE_WIDTH * 0.50))
 DIST_FROM_CAMERA_CENTRE_ANG_Z_OR_LNR_Y_RIGHTMOVE = (int(ZED_IMAGE_WIDTH * 0.15))
 
-TURN_FROM_AXIS_THRESHOLD = math.radians(8)
+TURN_FROM_AXIS_RIGHT_THRESHOLD = math.radians(8)
+TURN_FROM_AXIS_LEFT_THRESHOLD = math.radians(-15)
 TURN_FROM_AXIS_VERY_FAR = math.radians(25)
 TURN_FROM_AXIS_NEAR = math.radians(5)
 
@@ -577,7 +578,7 @@ class FollowMe_Go1():
 
             
             # Angle is positive for forward right and negative for forward left
-            if((abs(turn_deviation) > TURN_FROM_AXIS_THRESHOLD)
+            if((turn_deviation > TURN_FROM_AXIS_RIGHT_THRESHOLD or turn_deviation < TURN_FROM_AXIS_LEFT_THRESHOLD)
                and self.turn_deviation_flag != DIFF_CORRECTING
                and check_turn_deviation == True):
                 self.turn_deviation_flag = DIFF_ERR_DEBOUNCING
