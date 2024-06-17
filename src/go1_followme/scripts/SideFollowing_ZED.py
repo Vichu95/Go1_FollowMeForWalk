@@ -544,7 +544,7 @@ class FollowMe_Go1():
                 self.centre_deviation_cntr += 1
 
                 ## If too far, no need of debouncing
-                if(abs(centre_deviation) > (self.axis_origin[POINT_X]-DIST_FROM_CAMERA_CENTRE_TOO_FAR)):
+                if(self.BB_MIDDLE_BOTTOM_LINE[POINT_X] > (self.axis_origin[POINT_X]-DIST_FROM_CAMERA_CENTRE_TOO_FAR)):
                     self.centre_deviation_flag = DIFF_CORRECTING
                     self.centre_deviation_cntr = CENTRE_ERR_DEBOUNCE_THRESHOLD
             else:
