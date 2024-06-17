@@ -52,6 +52,7 @@ DIST_PERSON_CAMERA_VERY_FAR = 130
 DIST_PERSON_CAMERA_TOO_CLOSE = 50
 DIST_PERSON_CAMERA_NO_MOVE_LEFTTURN = 60 #todo remove
 DIST_PERSON_CAMERA_INIT_HIGH_VALUE = 300
+DIST_PERSON_CAMERA_CLOSE_SLOWDOWN_PIXEL = 345
 
 DIST_FROM_CAMERA_CENTRE_TOO_FAR = (int(ZED_IMAGE_WIDTH * 0.5))
 DIST_FROM_CAMERA_CENTRE_THRESHOLD = (int(ZED_IMAGE_WIDTH * 0.075))
@@ -412,6 +413,7 @@ class FollowMe_Go1():
 
 
                         self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (0,DIST_PERSON_CAMERA_TOBEKEPT_PIXEL), (self.image_width, DIST_PERSON_CAMERA_TOBEKEPT_PIXEL), color_ip=COLOR_YELLOW, alpha=TRANSPARENCY_ALPHA_GRAPHS + 0.2)
+                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (0,DIST_PERSON_CAMERA_CLOSE_SLOWDOWN_PIXEL), (self.image_width, DIST_PERSON_CAMERA_CLOSE_SLOWDOWN_PIXEL), color_ip=COLOR_YELLOW, alpha=TRANSPARENCY_ALPHA_GRAPHS)
                         
 
                         # Calculate centre point of the detected person
@@ -641,9 +643,8 @@ class FollowMe_Go1():
                             speed_slope = (LNR_VEL_X_ONLY_STRAIGHT_OK_MAX - LNR_VEL_X_ONLY_STRAIGHT_OK_MIN)/(DIST_FROM_CAMERA_CENTRE_TOO_FAR - DIST_FROM_CAMERA_CENTRE_NEAR)
                             followme_cmd_vel.linear.x  = abs(centre_deviation - DIST_FROM_CAMERA_CENTRE_NEAR) * speed_slope + LNR_VEL_X_ONLY_STRAIGHT_OK_MIN
                             print("Slope = " + str(speed_slope) + " Linear x speed [only straight] = " + str(followme_cmd_vel.linear.x))
-
+                    
                             self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left' )
-
 
 
                         ## Case 2 : Straight and right turn
@@ -653,27 +654,35 @@ class FollowMe_Go1():
                             speed_slope = (LNR_VEL_X_STRAIGHT_RIGHT_OK_MAX - LNR_VEL_X_STRAIGHT_RIGHT_OK_MIN)/(DIST_FROM_CAMERA_CENTRE_TOO_FAR - DIST_FROM_CAMERA_CENTRE_NEAR)
                             followme_cmd_vel.linear.x  = abs(centre_deviation - DIST_FROM_CAMERA_CENTRE_NEAR) * speed_slope + LNR_VEL_X_STRAIGHT_RIGHT_OK_MIN
                             print("Slope = " + str(speed_slope) + " Linear x speed [straight + right] = " + str(followme_cmd_vel.linear.x))
-
+                    
                             self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left' )
-
 
 
 
                         ## Case 3 : Straight and left turn
 
-                            # Only if its not 'turn left correcting and depth is low region'
-
+                            # Normal straight speed when bounding box is above DIST_PERSON_CAMERA_CLOSE_SLOWDOWN_PIXEL
+                            # Below the line, lower speed : Only if its not 'turn left correcting and depth is low region'
                             # No linear x bw DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE and camera edge
-                            # Very low speed in other region close to axis
-                        if((self.turn_deviation_flag == DIFF_CORRECTING and turn_deviation < 0)
-                            and  abs(centre_deviation) > DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE ):                        
-                            print("Person moved front left")
+                        if(self.turn_deviation_flag == DIFF_CORRECTING and turn_deviation < 0):
 
-                            speed_slope = (LNR_VEL_X_LEFT_OK_MAX - LNR_VEL_X_LEFT_OK_MIN)/(DIST_FROM_CAMERA_CENTRE_TOO_FAR - DIST_FROM_CAMERA_CENTRE_NEAR)
-                            followme_cmd_vel.linear.x  = abs(centre_deviation - DIST_FROM_CAMERA_CENTRE_NEAR) * speed_slope + LNR_VEL_X_LEFT_OK_MIN
-                            print("Slope = " + str(speed_slope) + " Linear x speed [straight + left] = " + str(followme_cmd_vel.linear.x))
+                            if(self.BB_MIDDLE_BOTTOM_LINE[POINT_Y] < DIST_PERSON_CAMERA_CLOSE_SLOWDOWN_PIXEL):
+                                # BB above the line
+                                print("Person moved front left but with normal speed")
+                                speed_slope = (LNR_VEL_X_ONLY_STRAIGHT_OK_MAX - LNR_VEL_X_ONLY_STRAIGHT_OK_MIN)/(DIST_FROM_CAMERA_CENTRE_TOO_FAR - DIST_FROM_CAMERA_CENTRE_NEAR)
+                                followme_cmd_vel.linear.x  = abs(centre_deviation - DIST_FROM_CAMERA_CENTRE_NEAR) * speed_slope + LNR_VEL_X_ONLY_STRAIGHT_OK_MIN
+                                print("Slope = " + str(speed_slope) + " Linear x speed [straight + left + normal] = " + str(followme_cmd_vel.linear.x))
+                    
+                                self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left' )
 
-                            self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left' )
+
+                            elif(abs(centre_deviation) > DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE ):                        
+                                print("Person moved front left with slow speed")
+                                speed_slope = (LNR_VEL_X_LEFT_OK_MAX - LNR_VEL_X_LEFT_OK_MIN)/(DIST_FROM_CAMERA_CENTRE_TOO_FAR - DIST_FROM_CAMERA_CENTRE_NEAR)
+                                followme_cmd_vel.linear.x  = abs(centre_deviation - DIST_FROM_CAMERA_CENTRE_NEAR) * speed_slope + LNR_VEL_X_LEFT_OK_MIN
+                                print("Slope = " + str(speed_slope) + " Linear x speed [straight + left] = " + str(followme_cmd_vel.linear.x))
+                    
+                                self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left' )
 
 
                     print("Previous speed x",  self.prev_cmd_vel_linear_x)
