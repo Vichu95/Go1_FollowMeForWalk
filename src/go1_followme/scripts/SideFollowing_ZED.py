@@ -52,7 +52,7 @@ DIST_PERSON_CAMERA_VERY_FAR = 130
 DIST_PERSON_CAMERA_TOO_CLOSE = 50
 DIST_PERSON_CAMERA_NO_MOVE_LEFTTURN = 60 #todo remove
 DIST_PERSON_CAMERA_INIT_HIGH_VALUE = 300
-DIST_PERSON_CAMERA_CLOSE_SLOWDOWN_PIXEL = 345
+DIST_PERSON_CAMERA_CLOSE_SLOWDOWN_PIXEL = 335
 
 DIST_FROM_CAMERA_CENTRE_TOO_FAR = (int(ZED_IMAGE_WIDTH * 0.5))
 DIST_FROM_CAMERA_CENTRE_THRESHOLD = (int(ZED_IMAGE_WIDTH * 0.075))
@@ -129,7 +129,7 @@ LNR_VEL_X_STRAIGHT_RIGHT_OK_MIN = 0.4
 LNR_VEL_X_STRAIGHT_RIGHT_OK_MAX = 1.2
 LNR_VEL_X_LEFT_OK_MIN = 0.15
 LNR_VEL_X_LEFT_OK_MAX = 0.4
-LNR_VEL_X_TOO_FAR = 0.5
+LNR_VEL_X_TOO_FAR = 1.2
 LNR_VEL_X_POS_STEP = 0.05
 
 ANG_VEL_Z_MIN = 0.15
@@ -630,7 +630,11 @@ class FollowMe_Go1():
 
                 if(centre_deviation > 0):
 
-                    if(centre_deviation > (self.axis_origin[POINT_X]-DIST_FROM_CAMERA_CENTRE_TOO_FAR)):
+                    if((self.BB_MIDDLE_BOTTOM_LINE[POINT_X] < (self.axis_origin[POINT_X]-DIST_FROM_CAMERA_CENTRE_TOO_FAR))
+                       and (self.turn_deviation_flag == DIFF_CORRECTING and turn_deviation < 0)
+                       and (self.BB_MIDDLE_BOTTOM_LINE[POINT_Y] < DIST_PERSON_CAMERA_CLOSE_SLOWDOWN_PIXEL)):
+                        # Dont check far away in bottom left corner, that close and left turn. Here it should be low speed
+
                         print("Person moved too front")
                         followme_cmd_vel.linear.x = POS_SIGN * LNR_VEL_X_TOO_FAR
                         self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left', color_ip=COLOR_ORANGE )
