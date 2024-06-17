@@ -236,6 +236,7 @@ class FollowMe_Go1():
         self.axis_origin = (int(self.image_width/2 + self.image_width/6 ), DIST_PERSON_CAMERA_TOBEKEPT_PIXEL)
         self.prev_cmd_vel_linear_x = 0.0
         self.prev_cmd_vel_angular_z = 0.0
+        self.prev_turn_deviation = 0.0
         
         ## CALIBRATION
         self.depth_pixel_ratio_array = [ZED_RATIO_DEPTH_PIXEL] #todo
@@ -565,12 +566,15 @@ class FollowMe_Go1():
             ## Is turn deviations needed to checked?
             # - Skip check when person is at centre, except when correcting
             # - Skip turning for now when person moves back
+            # - When the direction of turn changes -> reset the counter for now : multiply, sign negative means different signs
             check_turn_deviation = True
             if(((abs(centre_deviation) <= DIST_FROM_CAMERA_CENTRE_THRESHOLD) and self.turn_deviation_flag != DIFF_CORRECTING)
-               or centre_deviation < 0):
+               or centre_deviation < 0
+               or (self.prev_turn_deviation * turn_deviation < 0)):
                 print("Skipping turn deviation check")
                 check_turn_deviation = False
                 self.turn_deviation_flag = DIFF_MAINTAINED
+
             
             # Angle is positive for forward right and negative for forward left
             if((abs(turn_deviation) > TURN_FROM_AXIS_THRESHOLD)
@@ -587,7 +591,7 @@ class FollowMe_Go1():
                 self.turn_deviation_cntr = 0
 
             print("Turn Deviation Flag : ", self.turn_deviation_flag, " Turn Deviation : ", turn_deviation, " Turn Deviation Counter : ",self.turn_deviation_cntr)
-
+            self.prev_turn_deviation = turn_deviation # Update previous deviation
 
 
             #####
