@@ -595,13 +595,25 @@ class FollowMe_Go1():
             self.prev_turn_deviation = turn_deviation # Update previous deviation
 
 
-            #####
+            ##########
             # CORRECTING DEVIATIONS
-            #####
+            ##########
 
             ## Handling edges at left turn. Between DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE and centre, if depth is too less, do only depth
             ## Outside DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE and camera edge, priority for turn only
             ## Between DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE and axis, do small linear and turn. Only do depth if depth low as point 1
+
+
+
+            ###
+            # Correcting CENTRE Deviation
+            ###
+
+            ## Resetting of aligning to centre
+            if(abs(centre_deviation) < DIST_FROM_CAMERA_CENTRE_NEAR):
+                self.centre_deviation_flag = DIFF_MAINTAINED
+                self.centre_deviation_cntr = 0
+                print("Centre is maintained")
 
             ## Only move left/right if the debounce threshold is reached
             if(self.centre_deviation_flag == DIFF_CORRECTING):                    
@@ -674,13 +686,6 @@ class FollowMe_Go1():
                             followme_cmd_vel.linear.x = LNR_VEL_X_OK_MIN
                             print("Keeping the linear x at minimum configured velocity")
 
-
-                ## Resetting of aligning to centre
-                if(abs(centre_deviation) < DIST_FROM_CAMERA_CENTRE_NEAR):
-                    self.centre_deviation_flag = DIFF_MAINTAINED
-                    self.centre_deviation_cntr = 0
-                    print("Centre is maintained")
-
             else:
                 print("Centre Maintained")
                 followme_cmd_vel.linear.x = 0.0
@@ -691,6 +696,17 @@ class FollowMe_Go1():
                     self.centre_deviation_flag = DIFF_MAINTAINED
 
 
+
+            ###
+            # Correcting TURN Deviation
+            ###
+
+            ## Resetting of aligning to centre
+            if(abs(turn_deviation) < TURN_FROM_AXIS_NEAR or centre_deviation <= 0):
+                followme_cmd_vel.angular.z = 0.0
+                self.turn_deviation_flag = DIFF_MAINTAINED
+                self.turn_deviation_cntr = 0
+                print("Turn is maintained")
 
             ## Only turn left/right if the debounce threshold is reached
             if(self.turn_deviation_flag == DIFF_CORRECTING):
@@ -759,15 +775,6 @@ class FollowMe_Go1():
                             followme_cmd_vel.angular.z = NEG_SIGN * ANG_VEL_Z_MIN
                             print("Keeping the angular z at minimum configured velocity of ", followme_cmd_vel.angular.z)
 
-
-
-                ## Resetting of aligning to centre
-                if(abs(turn_deviation) < TURN_FROM_AXIS_NEAR or centre_deviation <= 0):
-                    followme_cmd_vel.angular.z = 0.0
-                    self.turn_deviation_flag = DIFF_MAINTAINED
-                    self.turn_deviation_cntr = 0
-                    print("Turn is maintained")
-
             else:
                 print("Turn Maintained")
                 followme_cmd_vel.angular.z = 0.0
@@ -778,6 +785,15 @@ class FollowMe_Go1():
                     self.turn_deviation_flag = DIFF_MAINTAINED
 
             
+            ###
+            # Correcting DEPTH Deviation
+            ###
+
+            ## Resetting of maintaining depth
+            if(abs(depth_diff) <= DIST_PERSON_CAMERA_VALID_THRESHOLD):
+                self.depth_diff_flag = DIFF_MAINTAINED
+                self.depth_diff_cntr = 0
+                print("Depth is maintained")
 
             ## Only move in y direction, when turning else is not going on
             if(self.depth_diff_flag == DIFF_CORRECTING):
@@ -818,14 +834,6 @@ class FollowMe_Go1():
 
                 else:
                     print("Skipping depth deviation correction")
-
-
-                ## Resetting of aligning to centre
-                if(abs(depth_diff) <= DIST_PERSON_CAMERA_VALID_THRESHOLD):
-                    self.depth_diff_flag = DIFF_MAINTAINED
-                    self.depth_diff_cntr = 0
-                    print("Depth is maintained")
-
 
             else:
                 print("Depth Maintained")
