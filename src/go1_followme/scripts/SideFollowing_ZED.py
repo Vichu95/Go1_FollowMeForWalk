@@ -57,7 +57,8 @@ DIST_FROM_CAMERA_CENTRE_TOO_FAR = (int(ZED_IMAGE_WIDTH * 0.5))
 DIST_FROM_CAMERA_CENTRE_THRESHOLD = (int(ZED_IMAGE_WIDTH * 0.075))
 DIST_FROM_CAMERA_CENTRE_NEAR = (int(ZED_IMAGE_WIDTH * 0.03125))
 DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE = (int(ZED_IMAGE_WIDTH * 0.3))
-DIST_FROM_CAMERA_CENTRE_TO_CALC_TURN = (int(ZED_IMAGE_WIDTH * 0.50))
+DIST_FROM_CAMERA_CENTRE_TO_CALC_TURN_ANGLE = (int(ZED_IMAGE_WIDTH * 0.50))
+DIST_FROM_CAMERA_CENTRE_ANG_Z_OR_LNR_Y_RIGHTMOVE = (int(ZED_IMAGE_WIDTH * 0.15))
 
 TURN_FROM_AXIS_THRESHOLD = math.radians(8)
 TURN_FROM_AXIS_VERY_FAR = math.radians(25)
@@ -85,6 +86,7 @@ COLOR_YELLOW = [0,255,255]
 COLOR_GREEN = [0,255,0]
 COLOR_RED = [0,0,255]
 COLOR_ORANGE = [0,165,255]
+COLOR_PURPLE = [214,112,218]
 
 OBJ_BB_THICKNESS = 2
 DEFAULT_TEXT_SIZE = 1
@@ -404,10 +406,11 @@ class FollowMe_Go1():
                         # self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.axis_origin[POINT_X]+DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE,0), (self.axis_origin[POINT_X]+DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE,self.image_height), color_ip=COLOR_ORANGE, alpha=TRANSPARENCY_ALPHA_GRAPHS)
                         self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.axis_origin[POINT_X]-DIST_FROM_CAMERA_CENTRE_TOO_FAR,0), (self.axis_origin[POINT_X]-DIST_FROM_CAMERA_CENTRE_TOO_FAR,self.image_height), color_ip=COLOR_RED, alpha=TRANSPARENCY_ALPHA_GRAPHS)
                         # self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.axis_origin[POINT_X]+DIST_FROM_CAMERA_CENTRE_TOO_FAR,0), (self.axis_origin[POINT_X]+DIST_FROM_CAMERA_CENTRE_TOO_FAR,self.image_height), color_ip=COLOR_RED, alpha=TRANSPARENCY_ALPHA_GRAPHS)
+                        self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (self.axis_origin[POINT_X]-DIST_FROM_CAMERA_CENTRE_ANG_Z_OR_LNR_Y_RIGHTMOVE,0), (self.axis_origin[POINT_X]-DIST_FROM_CAMERA_CENTRE_ANG_Z_OR_LNR_Y_RIGHTMOVE,self.image_height), color_ip=COLOR_PURPLE, alpha=TRANSPARENCY_ALPHA_GRAPHS)
 
 
                         self.camera_raw_op = addOpenCVLine(self.camera_raw_op, (0,DIST_PERSON_CAMERA_TOBEKEPT_PIXEL), (self.image_width, DIST_PERSON_CAMERA_TOBEKEPT_PIXEL), color_ip=COLOR_YELLOW, alpha=TRANSPARENCY_ALPHA_GRAPHS + 0.2)
-                       
+                        
 
                         # Calculate centre point of the detected person
                         print("Person centre : ",self.BB_MIDDLE_BOTTOM_LINE[POINT_X])
@@ -537,7 +540,7 @@ class FollowMe_Go1():
                 self.centre_deviation_cntr += 1
 
                 ## If too far, no need of debouncing
-                if(abs(centre_deviation) > DIST_FROM_CAMERA_CENTRE_TOO_FAR):
+                if(abs(centre_deviation) > (self.axis_origin[POINT_X]-DIST_FROM_CAMERA_CENTRE_TOO_FAR)):
                     self.centre_deviation_flag = DIFF_CORRECTING
                     self.centre_deviation_cntr = CENTRE_ERR_DEBOUNCE_THRESHOLD
             else:
@@ -552,7 +555,7 @@ class FollowMe_Go1():
 
             
             ## Calculate angle of turn : Angle made by line from person to axis origin
-            slope_of_personDetected_withAxis = (self.BB_MIDDLE_BOTTOM_LINE[POINT_Y] - self.axis_origin[POINT_Y])/(DIST_FROM_CAMERA_CENTRE_TO_CALC_TURN - self.axis_origin[POINT_X])
+            slope_of_personDetected_withAxis = (self.BB_MIDDLE_BOTTOM_LINE[POINT_Y] - self.axis_origin[POINT_Y])/(DIST_FROM_CAMERA_CENTRE_TO_CALC_TURN_ANGLE - self.axis_origin[POINT_X])
             turn_deviation = math.atan(slope_of_personDetected_withAxis)
             angle_theta = math.degrees(turn_deviation)
             print("Angle is :", angle_theta, " Radians ", turn_deviation)
@@ -608,7 +611,7 @@ class FollowMe_Go1():
 
                 if(centre_deviation > 0):
 
-                    if(self.person_depth > DIST_FROM_CAMERA_CENTRE_TOO_FAR):
+                    if(centre_deviation > (self.axis_origin[POINT_X]-DIST_FROM_CAMERA_CENTRE_TOO_FAR)):
                         print("Person moved too front")
                         followme_cmd_vel.linear.x = POS_SIGN * LNR_VEL_X_TOO_FAR
                         self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left', color_ip=COLOR_ORANGE )
@@ -778,10 +781,22 @@ class FollowMe_Go1():
                    or (self.person_depth < DIST_PERSON_CAMERA_TOO_CLOSE and abs(centre_deviation) < DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE)): #Handle left edge
                     # If difference is greater than threshold, move forward
                     if(depth_diff > 0):
-                            
-                        print("Moving right")
-                        followme_cmd_vel.linear.y = NEG_SIGN * LNR_VEL_Y_MIN
-                        self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'up' )
+
+                        #Case 1 : Depth is greater, but the person is forward and no turn detected.
+                        # Without this case, the dog moves diagonally with linear x and y.
+                        # So when the person is little forward and depth is more, turn right with low velocity
+                        if(centre_deviation > (self.axis_origin[POINT_X]-DIST_FROM_CAMERA_CENTRE_ANG_Z_OR_LNR_Y_RIGHTMOVE)):
+                            print("Moving right with turn angular z")
+                            followme_cmd_vel.angular.z = NEG_SIGN * ANG_VEL_Z_MIN                    
+                            self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'topleft' )
+
+
+
+                        else:
+                            # Case 2 : Depth is greater and robot and person are almost close with respect to centre    
+                            print("Moving right with linear y")
+                            followme_cmd_vel.linear.y = NEG_SIGN * LNR_VEL_Y_MIN
+                            self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'up' )
 
                     # If less, move backward
                     if(depth_diff < 0):
