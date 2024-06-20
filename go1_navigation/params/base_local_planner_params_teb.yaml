@@ -13,13 +13,13 @@ TebLocalPlannerROS:
   exact_arc_length: False
   feasibility_check_no_poses: 5
   publish_feedback: False
-  max_vel_x: 0.5
-  max_vel_x_backwards: 0.4
+  max_vel_x: 0.4
+  max_vel_x_backwards: 0.3
   max_vel_y: 0.0
-  max_vel_theta: 0.5
-  acc_lim_x: 1.5
+  max_vel_theta: 1.0
+  acc_lim_x: 0.5
   acc_lim_y: 0.0
-  acc_lim_theta: 1.5
+  acc_lim_theta: 1.0
   min_turning_radius: 0.0
   footprint_model:
     type: "polygon"
