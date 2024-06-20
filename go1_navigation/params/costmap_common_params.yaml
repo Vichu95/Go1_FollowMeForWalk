@@ -48,5 +48,5 @@ dynamic_obstacle_layer:
 inflater_layer:
     enabled: true
     cost_scaling_factor: 3.0 
-    inflation_radius: 0.6 #0.45 #Minimum value: 0.379
+    inflation_radius: 0.4 #0.45 #Minimum value: 0.379
 
