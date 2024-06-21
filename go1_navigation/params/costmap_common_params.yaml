@@ -13,7 +13,8 @@ meter_scoring: true
 
 always_send_full_costmap: true
 
-footprint: [[-0.30, -0.08], [-0.30, 0.08], [0.30, 0.08], [0.30, -0.08]]
+# As per go1 spec : standing L*W*H  0.645*0.28*0.4m
+footprint: [[-0.36, -0.17], [-0.36, 0.17], [0.36, 0.17], [0.36, -0.17]]
 footprint_padding: 0.1
 
 plugins:
