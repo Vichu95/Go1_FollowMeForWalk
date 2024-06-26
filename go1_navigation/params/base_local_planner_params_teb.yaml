@@ -29,7 +29,7 @@ TebLocalPlannerROS:
     #type: "circular"
     #radius : 0.4
     type: "polygon"
-    vertices: [[-0.3225, -0.14], [-0.3225, 0.14], [0.3225, 0.14], [0.3225, -0.14]]
+    vertices: [[-0.40,-0.14],[-0.40,0.14],[0.31,0.14],[0.31,-0.14]]
 
   # GoalTolerance  
   xy_goal_tolerance: 0.3 #0.1
@@ -40,11 +40,11 @@ TebLocalPlannerROS:
   trans_stopped_vel: 0.11
 
   # Obstacles
-  min_obstacle_dist: 0.1
+  min_obstacle_dist: 0.15
   include_costmap_obstacles: True
   inflation_dist: 0.1
-  dynamic_obstacle_inflation_dist: 0.1
-  costmap_obstacles_behind_robot_dist: 0.1
+  dynamic_obstacle_inflation_dist: 0.2
+  costmap_obstacles_behind_robot_dist: 0.2
   obstacle_poses_affected: 5
   include_dynamic_obstacles: true
 
@@ -64,11 +64,11 @@ TebLocalPlannerROS:
   weight_kinematics_nh: 10000
   weight_kinematics_forward_drive: 700
   weight_kinematics_turning_radius: 0
-  weight_optimaltime: 2
-  weight_shortest_path: 2
+  weight_optimaltime: 300
+  weight_shortest_path: 50
   weight_obstacle: 200
   weight_inflation: 0.2
-  weight_dynamic_obstacle: 100
+  weight_dynamic_obstacle: 200
   weight_dynamic_obstacle_inflation: 0.2
   weight_viapoint: 1
   weight_adapt_factor: 2

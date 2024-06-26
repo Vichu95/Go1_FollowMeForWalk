@@ -14,7 +14,7 @@ meter_scoring: true
 always_send_full_costmap: true
 
 # As per go1 spec : standing L*W*H  0.645*0.28*0.4m
-footprint: [[-0.3225, -0.14], [-0.3225, 0.14], [0.3225, 0.14], [0.3225, -0.14]]
+footprint: [[-0.40,-0.14],[-0.40,0.14],[0.31,0.14],[0.31,-0.14]]
 footprint_padding: 0.02
 
 plugins:
@@ -49,6 +49,6 @@ dynamic_obstacle_layer:
 
 inflater_layer:
     enabled: true
-    cost_scaling_factor: 50.0 
+    cost_scaling_factor: 25.0 
     inflation_radius: 0.5 #Minimum value: 0.379
 
