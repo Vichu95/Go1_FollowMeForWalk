@@ -15,7 +15,7 @@ always_send_full_costmap: true
 
 # As per go1 spec : standing L*W*H  0.645*0.28*0.4m
 footprint: [[-0.3225, -0.14], [-0.3225, 0.14], [0.3225, 0.14], [0.3225, -0.14]]
-footprint_padding: 0.01
+footprint_padding: 0.02
 
 plugins:
   - { name: obstacles_layer, type: "costmap_2d::ObstacleLayer" }
