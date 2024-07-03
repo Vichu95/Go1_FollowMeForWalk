@@ -174,6 +174,11 @@ void Base::cmdVelCallback(geometry_msgs::Twist msg) {
         robot_high_cmd.velocity[0] = msg.linear.x;
         robot_high_cmd.yawSpeed = msg.angular.z;
     }
+    // Added by vishnu for both y and z movement
+    else if (msg.linear.y && msg.angular.z) {
+        robot_high_cmd.velocity[1] = msg.linear.y;
+        robot_high_cmd.yawSpeed = msg.angular.z;
+    }
     else if (msg.linear.x) {
         robot_high_cmd.velocity[0] = msg.linear.x;        
     }
