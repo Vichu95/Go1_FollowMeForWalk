@@ -811,8 +811,8 @@ class FollowMe_Go1():
             ## Only move in y direction, when turning else is not going on
             if(self.depth_diff_flag == DIFF_CORRECTING):
                 
-                if(self.turn_deviation_flag != DIFF_CORRECTING
-                   or (self.person_depth < DIST_PERSON_CAMERA_TOO_CLOSE and abs(centre_deviation) < DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE)): #Handle left edge
+                # if(self.turn_deviation_flag != DIFF_CORRECTING
+                #    or (self.person_depth < DIST_PERSON_CAMERA_TOO_CLOSE and abs(centre_deviation) < DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE)): #Handle left edge
                     # If difference is greater than threshold, move forward
                     if(depth_diff > 0):
 
@@ -845,8 +845,8 @@ class FollowMe_Go1():
                         else:
                             self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'down' )
 
-                else:
-                    print("Skipping depth deviation correction")
+                # else:
+                #     print("Skipping depth deviation correction")
 
             else:
                 print("Depth Maintained")
@@ -902,11 +902,6 @@ class FollowMe_Go1():
         followme_cmd_vel.linear.z = 0.0
         followme_cmd_vel.angular.x = 0.0
         followme_cmd_vel.angular.y = 0.0
-
-        # No angular when there is lienar y
-        if(followme_cmd_vel.linear.y != 0.0):
-            followme_cmd_vel.angular.z = 0.0
-            print("Safe : Reseting angular velocity to zero")
 
         self.followme_cmdvel_pub.publish(followme_cmd_vel)        
 
