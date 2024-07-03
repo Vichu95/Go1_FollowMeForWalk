@@ -137,6 +137,7 @@ ANG_VEL_Z_OK_MIN = 0.5
 ANG_VEL_Z_OK_MAX = 0.8
 ANG_VEL_Z_TOO_FAR = 0.9
 ANG_VEL_Z_POS_STEP = 0.2
+ANG_VEL_Z_WITH_LNR_Y_MAX = 0.5
 
 ################################################################
 ##############    C L A S S E S
@@ -902,6 +903,18 @@ class FollowMe_Go1():
         followme_cmd_vel.linear.z = 0.0
         followme_cmd_vel.angular.x = 0.0
         followme_cmd_vel.angular.y = 0.0
+
+
+        # Safety linear y + angular z check : Only allow if turning left
+        if(followme_cmd_vel.linear.y != 0.0):
+            if(followme_cmd_vel.angular.z > ANG_VEL_Z_WITH_LNR_Y_MAX):
+                followme_cmd_vel.angular.z = ANG_VEL_Z_WITH_LNR_Y_MAX
+                print("Safe : Limiting angular z to ANG_VEL_Z_WITH_LNR_Y_MAX")
+            elif(followme_cmd_vel.angular.z < 0.0):
+                followme_cmd_vel.angular.z = 0.0
+                print("Safe : Reseting angular velocity to zero")
+
+
 
         self.followme_cmdvel_pub.publish(followme_cmd_vel)        
 
