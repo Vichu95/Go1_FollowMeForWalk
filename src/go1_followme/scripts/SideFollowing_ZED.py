@@ -682,12 +682,13 @@ class FollowMe_Go1():
 
 
                             elif(abs(centre_deviation) > DIST_FROM_CAMERA_CENTRE_TURN_AND_MOVE ):                        
-                                print("Person moved front left with slow speed")
-                                speed_slope = (LNR_VEL_X_LEFT_OK_MAX - LNR_VEL_X_LEFT_OK_MIN)/(DIST_FROM_CAMERA_CENTRE_TOO_FAR - DIST_FROM_CAMERA_CENTRE_NEAR)
-                                followme_cmd_vel.linear.x  = abs(centre_deviation - DIST_FROM_CAMERA_CENTRE_NEAR) * speed_slope + LNR_VEL_X_LEFT_OK_MIN
-                                print("Slope = " + str(speed_slope) + " Linear x speed [straight + left] = " + str(followme_cmd_vel.linear.x))
+                                print("Person moved front left with slow speed  : Removed")
+                                # print("Person moved front left with slow speed")
+                                # speed_slope = (LNR_VEL_X_LEFT_OK_MAX - LNR_VEL_X_LEFT_OK_MIN)/(DIST_FROM_CAMERA_CENTRE_TOO_FAR - DIST_FROM_CAMERA_CENTRE_NEAR)
+                                # followme_cmd_vel.linear.x  = abs(centre_deviation - DIST_FROM_CAMERA_CENTRE_NEAR) * speed_slope + LNR_VEL_X_LEFT_OK_MIN
+                                # print("Slope = " + str(speed_slope) + " Linear x speed [straight + left] = " + str(followme_cmd_vel.linear.x))
                     
-                                self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left' )
+                                # self.camera_raw_op = addOpenCVArrow( self.camera_raw_op, start_pos = POS_IMAGE_BOTTOM_RIGHT_ARROW, direction = 'left' )
 
 
                     print("Previous speed x",  self.prev_cmd_vel_linear_x)
